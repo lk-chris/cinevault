@@ -2,15 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Check, ArrowRight, ArrowLeft, Star, Bookmark, Eye,
   LayoutGrid, List, Moon, SlidersHorizontal, Play,
-  ChevronRight, Heart, Share2, Key, RefreshCw, X, Sparkles,
-  ExternalLink, Film, Tv
+  ChevronRight, Heart, Share2, X, ExternalLink
 } from 'lucide-react';
 import {
   CinevaultMedia,
   OnboardingFilters,
   fetchDiscoverMovies,
   fetchTMDbDetails,
-  validateTMDbKey,
   CURATED_MEDIA_CATALOG
 } from './services/tmdb';
 
@@ -161,14 +159,9 @@ type Tab = "tonight" | "wl" | "wd";
 const DEFAULT_TMDB_KEY = 'a69878c434bec64f12cee0ffb2aff577';
 
 export default function App() {
-  // ─── API KEY & TMDB STATE ───
-  const [apiKey, setApiKey] = useState<string>(() => {
+  const [apiKey] = useState<string>(() => {
     return localStorage.getItem('cinevault_tmdb_key') || import.meta.env.VITE_TMDB_API_KEY || DEFAULT_TMDB_KEY;
   });
-  const [keyInput, setKeyInput] = useState<string>(apiKey);
-  const [keyValidating, setKeyValidating] = useState(false);
-  const [keyError, setKeyError] = useState<string | null>(null);
-  const [showKeyModal, setShowKeyModal] = useState(false);
 
   // ─── VIEW STATE ───
   const [view, setView] = useState<View>("onboarding");
@@ -180,7 +173,6 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("tonight");
   const [feedItems, setFeedItems] = useState<CinevaultMedia[]>(CURATED_MEDIA_CATALOG);
   const [feedLoading, setFeedLoading] = useState<boolean>(false);
-  const [feedSource, setFeedSource] = useState<'tmdb' | 'curated'>('curated');
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'movie' | 'tv' | 'anime'>('all');
   const [sortFilter, setSortFilter] = useState<'popularity.desc' | 'vote_average.desc' | 'primary_release_date.desc'>('popularity.desc');
 
@@ -281,7 +273,6 @@ export default function App() {
       );
 
       setFeedItems(res.results);
-      setFeedSource(res.source);
 
       // Register fetched items in mediaRegistry
       setMediaRegistry(prev => {
@@ -410,37 +401,6 @@ export default function App() {
       else { n.add(id); toast("Marked as watched"); }
       return n;
     });
-  };
-
-  // ═══════════════════════════════════
-  // API KEY SETTING DIALOG
-  // ═══════════════════════════════════
-  const handleSaveApiKey = async () => {
-    const trimmed = keyInput.trim();
-    if (!trimmed) {
-      setApiKey('');
-      localStorage.removeItem('cinevault_tmdb_key');
-      setShowKeyModal(false);
-      toast('Switched to Curated Preview feed');
-      loadFeed();
-      return;
-    }
-
-    setKeyValidating(true);
-    setKeyError(null);
-
-    const test = await validateTMDbKey(trimmed);
-    setKeyValidating(false);
-
-    if (test.valid) {
-      setApiKey(trimmed);
-      localStorage.setItem('cinevault_tmdb_key', trimmed);
-      setShowKeyModal(false);
-      toast('TMDb API Connected!');
-      loadFeed();
-    } else {
-      setKeyError(test.error || 'Invalid TMDb API Key');
-    }
   };
 
   // ═══════════════════════════════════
@@ -623,29 +583,14 @@ export default function App() {
           </div>
         ) : (
           /* Summary chips */
-          <div className="space-y-6">
-            <div className="flex flex-wrap gap-2.5">
-              {["fmt","mood","genre","time","age","era","lang"].flatMap(k =>
-                Array.from(sel[k]).map(v => (
-                  <span key={`${k}-${v}`} className="py-2.5 px-[18px] rounded-full bg-am/[0.12] text-am border border-am/30 text-[15px]">
-                    {ALL_LABELS[v] || v}
-                  </span>
-                ))
-              )}
-            </div>
-
-            <div className="p-4 rounded-2xl bg-s1 border border-white/[0.08] flex items-center justify-between">
-              <div>
-                <b className="block text-sm font-semibold">TMDb Integration Active</b>
-                <span className="text-xs text-t2">Your feed will query The Movie Database API based on these filters.</span>
-              </div>
-              <button
-                onClick={() => setShowKeyModal(true)}
-                className="py-1.5 px-3 rounded-full bg-s2 border border-white/10 text-xs font-mono text-am hover:bg-s3"
-              >
-                {apiKey ? 'API Key Set' : 'Configure Key'}
-              </button>
-            </div>
+          <div className="flex flex-wrap gap-2.5">
+            {["fmt","mood","genre","time","age","era","lang"].flatMap(k =>
+              Array.from(sel[k]).map(v => (
+                <span key={`${k}-${v}`} className="py-2.5 px-[18px] rounded-full bg-am/[0.12] text-am border border-am/30 text-[15px]">
+                  {ALL_LABELS[v] || v}
+                </span>
+              ))
+            )}
           </div>
         )}
       </div>
@@ -726,144 +671,85 @@ export default function App() {
     currentList = Array.from(wd).map(id => mediaRegistry.get(id)).filter(Boolean) as CinevaultMedia[];
   }
 
-  // Active filters summary badges
-  const activeVibePills = ["fmt", "mood", "genre", "time", "age"].flatMap(k =>
-    Array.from(sel[k]).slice(0, 2).map(v => ALL_LABELS[v] || v)
-  );
-
   const renderFeed = () => (
     <div className="min-h-screen bg-bg text-white pb-24">
-      <div className="max-w-[1100px] mx-auto px-4 pt-5">
-        {/* Top brand & TMDb Status Row */}
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-light tracking-tight">Cine<b className="text-am font-bold">Vault</b></span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-s1 border border-white/[0.08] text-t2 font-mono">
-              TMDB Feed
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowKeyModal(true)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono border transition-all ${
-                apiKey
-                  ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-400 hover:bg-emerald-900/40"
-                  : "bg-am/10 border-am/30 text-am hover:bg-am/20"
-              }`}
-            >
-              <Key size={13} />
-              {apiKey ? (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  TMDb Live
-                </>
-              ) : (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-am" />
-                  Connect TMDb
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => loadFeed()}
-              disabled={feedLoading}
-              title="Refresh feed"
-              className="w-8 h-8 rounded-full bg-s1 border border-white/[0.08] grid place-items-center text-t2 hover:text-white transition-colors disabled:opacity-50"
-            >
-              <RefreshCw size={14} className={feedLoading ? "animate-spin text-am" : ""} />
-            </button>
-          </div>
-        </div>
-
-        {/* Tab Heading & Count */}
-        <div className="flex items-baseline justify-between gap-3 flex-wrap">
-          <div className="flex items-baseline gap-3">
-            <h2 className="text-2xl font-bold tracking-tight m-0">{HEAD[tab]}</h2>
-            <span className="font-mono text-[13px] text-t2">
-              {feedLoading ? 'Searching...' : `${currentList.length} ${currentList.length === 1 ? 'title' : 'titles'}`}
-            </span>
-          </div>
-
-          {/* View toggle (Grid / List) */}
-          <div className="inline-flex p-[1px] rounded-full border border-white/[0.08] bg-s1">
-            <button onClick={() => setFeedView("list")} className={`w-9 h-9 rounded-full grid place-items-center transition-colors ${feedView === "list" ? "bg-[#f4efe6] text-[#111]" : "text-t2"}`}>
-              <List size={18} />
-            </button>
-            <button onClick={() => setFeedView("grid")} className={`w-9 h-9 rounded-full grid place-items-center transition-colors ${feedView === "grid" ? "bg-[#f4efe6] text-[#111]" : "text-t2"}`}>
-              <LayoutGrid size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Tonight's active vibe pills bar (only in Tonight tab) */}
-        {tab === "tonight" && (
-          <div className="mt-3 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar py-1">
-            <div className="flex items-center gap-1.5 flex-nowrap">
-              <span className="text-xs font-mono text-t2 mr-1">Vibe:</span>
-              {activeVibePills.length > 0 ? (
-                activeVibePills.map((pill, i) => (
-                  <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-s1 border border-white/[0.08] text-gray-300 whitespace-nowrap">
-                    {pill}
-                  </span>
-                ))
-              ) : (
-                <span className="text-xs text-t2">All genres</span>
-              )}
+      {/* Sticky Feed Header */}
+      <header className="sticky top-0 z-30 bg-[#0A0A0C]/95 backdrop-blur-md border-b border-white/[0.08] px-4 pt-[max(14px,env(safe-area-inset-top))] pb-3">
+        <div className="max-w-[1100px] mx-auto space-y-2.5">
+          {/* Top row: CineVault logo + Tab Heading & Count + View Toggle */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-baseline gap-2.5 flex-wrap">
+              <span className="text-xl font-light tracking-tight mr-1">Cine<b className="text-am font-bold">Vault</b></span>
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight m-0">{HEAD[tab]}</h2>
+              <span className="font-mono text-xs text-t2">
+                {feedLoading ? 'Searching...' : `${currentList.length} ${currentList.length === 1 ? 'title' : 'titles'}`}
+              </span>
             </div>
 
-            <button
-              onClick={openVibe}
-              className="flex items-center gap-1 text-xs text-am font-mono hover:underline whitespace-nowrap pl-2"
-            >
-              <SlidersHorizontal size={13} /> Edit vibe
-            </button>
-          </div>
-        )}
-
-        {/* In-feed Category & Sort filters (only in Tonight tab) */}
-        {tab === "tonight" && (
-          <div className="flex items-center justify-between gap-3 mt-3 mb-5 flex-wrap">
-            {/* Format filters */}
-            <div className="flex items-center gap-1.5">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'movie', label: 'Movies' },
-                { id: 'tv', label: 'TV Shows' },
-                { id: 'anime', label: 'Anime' },
-              ].map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategoryFilter(cat.id as any)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
-                    categoryFilter === cat.id
-                      ? "bg-am text-[#111] border-am font-semibold"
-                      : "bg-s1 border-white/[0.08] text-t2 hover:text-white"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Sort selector */}
-            <div className="flex items-center gap-1.5 font-mono text-xs text-t2">
-              <span>Sort:</span>
-              <select
-                value={sortFilter}
-                onChange={e => setSortFilter(e.target.value as any)}
-                className="bg-s1 border border-white/[0.08] rounded-full px-2.5 py-1 text-xs text-white focus:outline-none focus:border-am"
+            {/* View toggle (Grid / List) */}
+            <div className="inline-flex p-[1px] rounded-full border border-white/[0.08] bg-s1">
+              <button
+                onClick={() => setFeedView("list")}
+                aria-label="List view"
+                className={`w-8 h-8 rounded-full grid place-items-center transition-colors ${feedView === "list" ? "bg-[#f4efe6] text-[#111]" : "text-t2 hover:text-white"}`}
               >
-                <option value="popularity.desc">Popularity</option>
-                <option value="vote_average.desc">Highest Rated</option>
-                <option value="primary_release_date.desc">Newest Releases</option>
-              </select>
+                <List size={16} />
+              </button>
+              <button
+                onClick={() => setFeedView("grid")}
+                aria-label="Grid view"
+                className={`w-8 h-8 rounded-full grid place-items-center transition-colors ${feedView === "grid" ? "bg-[#f4efe6] text-[#111]" : "text-t2 hover:text-white"}`}
+              >
+                <LayoutGrid size={16} />
+              </button>
             </div>
           </div>
-        )}
 
-        {/* Loading Skeleton State */}
+          {/* In-feed Category & Sort filters (only in Tonight tab) */}
+          {tab === "tonight" && (
+            <div className="flex items-center justify-between gap-2.5 pt-0.5 flex-wrap">
+              {/* Format filters */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                {[
+                  { id: 'all', label: 'All' },
+                  { id: 'movie', label: 'Movies' },
+                  { id: 'tv', label: 'TV Shows' },
+                  { id: 'anime', label: 'Anime' },
+                ].map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setCategoryFilter(cat.id as any)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border whitespace-nowrap ${
+                      categoryFilter === cat.id
+                        ? "bg-am text-[#111] border-am font-semibold"
+                        : "bg-s1 border-white/[0.08] text-t2 hover:text-white"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Sort selector */}
+              <div className="flex items-center gap-1.5 font-mono text-xs text-t2 ml-auto">
+                <span>Sort:</span>
+                <select
+                  value={sortFilter}
+                  onChange={e => setSortFilter(e.target.value as any)}
+                  className="bg-s1 border border-white/[0.08] rounded-full px-2.5 py-1 text-xs text-white focus:outline-none focus:border-am cursor-pointer"
+                >
+                  <option value="popularity.desc">Popularity</option>
+                  <option value="vote_average.desc">Highest Rated</option>
+                  <option value="primary_release_date.desc">Newest Releases</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Main feed cards content */}
+      <div className="max-w-[1100px] mx-auto px-4 pt-4">
         {feedLoading && currentList.length === 0 ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-3 gap-y-4">
             {Array.from({ length: 8 }, (_, i) => (
@@ -1057,7 +943,7 @@ export default function App() {
             <div className="aspect-video rounded-xl bg-gradient-to-br from-[#2b2b2f] to-[#050506] grid place-items-center mb-3">
               <div className="text-center p-4">
                 <Play size={34} className="text-am mx-auto mb-2 opacity-80" />
-                <p className="text-xs text-t2 m-0">Trailer video not attached. Add TMDb API key to fetch official trailers.</p>
+                <p className="text-xs text-t2 m-0">Official trailer preview not available for this title.</p>
               </div>
             </div>
           )}
@@ -1091,7 +977,7 @@ export default function App() {
           <div className="flex items-center justify-between mb-2">
             <div>
               <h3 className="text-lg font-bold m-0">Where to watch</h3>
-              <p className="text-xs font-mono text-t2 m-0">Streaming availability from JustWatch & TMDb</p>
+              <p className="text-xs font-mono text-t2 m-0">Streaming & rental availability</p>
             </div>
             <button onClick={() => setSheetContent(null)} className="w-8 h-8 rounded-full bg-s2 grid place-items-center text-t2 hover:text-white">
               <X size={16} />
@@ -1154,23 +1040,28 @@ export default function App() {
 
     return (
       <div className="min-h-screen bg-bg text-white pb-12">
-        <div className="max-w-[1100px] mx-auto px-4">
-          {/* Top navigation row */}
-          <div className="py-3 flex items-center justify-between">
+        {/* Sticky Detail Top Bar */}
+        <header className="sticky top-0 z-30 bg-[#0A0A0C]/95 backdrop-blur-md border-b border-white/[0.08] px-4 pt-[max(12px,env(safe-area-inset-top))] pb-2.5">
+          <div className="max-w-[1100px] mx-auto flex items-center justify-between">
             <button
               onClick={closeDetail}
-              className="w-10 h-10 rounded-full bg-s1 border border-white/[0.08] grid place-items-center backdrop-blur-md hover:bg-s2 transition-colors"
+              aria-label="Back to feed"
+              className="w-10 h-10 rounded-full bg-s1 border border-white/[0.08] grid place-items-center backdrop-blur-md hover:bg-s2 transition-colors text-white"
             >
               <ArrowLeft size={18} />
             </button>
-
-            {detailLoading && (
-              <span className="text-xs font-mono text-am flex items-center gap-1.5">
-                <RefreshCw size={12} className="animate-spin" /> Fetching TMDb details...
-              </span>
-            )}
+            <div className="text-sm font-semibold truncate max-w-[200px] sm:max-w-[420px] text-gray-200">
+              {item.title}
+            </div>
+            <div className="w-10 flex justify-end">
+              {detailLoading && (
+                <div className="w-4 h-4 rounded-full border-2 border-am border-t-transparent animate-spin" />
+              )}
+            </div>
           </div>
+        </header>
 
+        <div className="max-w-[1100px] mx-auto px-4">
           {/* Backdrop Hero Banner */}
           <div className="relative h-[clamp(240px,38vw,420px)] -mx-4 rounded-b-[24px] overflow-hidden bg-s2 mb-2 border-b border-white/[0.08]">
             {item.backdropUrl || item.posterUrl ? (
@@ -1385,11 +1276,11 @@ export default function App() {
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
             <div className="p-3 rounded-xl bg-s1 border border-white/[0.08]">
               <b className="text-2xl font-semibold leading-none block text-[#2dd4bf]">{item.ratings.tmdb}<small className="text-[11px] text-t2 font-normal"> /10</small></b>
-              <span className="block mt-1.5 font-mono text-[10px] text-t2 uppercase tracking-[0.06em]">TMDb score</span>
+              <span className="block mt-1.5 font-mono text-[10px] text-t2 uppercase tracking-[0.06em]">Audience score</span>
             </div>
             <div className="p-3 rounded-xl bg-s1 border border-white/[0.08]">
               <b className="text-2xl font-semibold leading-none block text-white">{item.ratings.tmdbVotes}</b>
-              <span className="block mt-1.5 font-mono text-[10px] text-t2 uppercase tracking-[0.06em]">TMDb votes</span>
+              <span className="block mt-1.5 font-mono text-[10px] text-t2 uppercase tracking-[0.06em]">Audience votes</span>
             </div>
             {item.ratings.imdb && item.ratings.imdb !== 'NR' && (
               <div className="p-3 rounded-xl bg-s1 border border-white/[0.08]">
@@ -1403,9 +1294,6 @@ export default function App() {
                 <span className="block mt-1.5 font-mono text-[10px] text-t2 uppercase tracking-[0.06em]">Rotten Tomatoes</span>
               </div>
             )}
-          </div>
-          <div className="mt-2 font-mono text-[11px] text-[#6B7280]">
-            Scores from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.
           </div>
 
           {/* User Reviews Module */}
@@ -1497,102 +1385,6 @@ export default function App() {
   };
 
   // ═══════════════════════════════════
-  // RENDER: TMDB API KEY SETTINGS MODAL
-  // ═══════════════════════════════════
-  const renderKeyModal = () => {
-    if (!showKeyModal) return null;
-    return (
-      <div
-        id="key-modal-bg"
-        onClick={e => { if ((e.target as HTMLElement).id === 'key-modal-bg') setShowKeyModal(false); }}
-        className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm"
-      >
-        <div className="w-full max-w-[480px] bg-[#141519] border border-white/10 rounded-3xl p-6 shadow-2xl relative">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-am/15 text-am grid place-items-center">
-                <Key size={18} />
-              </div>
-              <h3 className="text-lg font-bold">The Movie Database (TMDb) API</h3>
-            </div>
-            <button
-              onClick={() => setShowKeyModal(false)}
-              className="w-8 h-8 rounded-full bg-s2 grid place-items-center text-t2 hover:text-white"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          <p className="text-xs text-t2 leading-relaxed mb-4">
-            Cinevault queries TMDb's <code className="text-gray-300">/discover/movie</code> and <code className="text-gray-300">/discover/tv</code> API live based on your vibe selections.
-            Enter your TMDb v3 API Key or v4 Read Access Token below:
-          </p>
-
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-mono text-t2 mb-1.5">TMDb API Key / Access Token</label>
-              <input
-                type="text"
-                value={keyInput}
-                onChange={e => { setKeyInput(e.target.value); setKeyError(null); }}
-                placeholder="e.g. 32-character key or Bearer token"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-bg border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-am"
-              />
-            </div>
-
-            {keyError && (
-              <div className="p-2.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-400 text-xs">
-                {keyError}
-              </div>
-            )}
-
-            <div className="flex items-center justify-between text-[11px] text-t2 font-mono pt-1">
-              <a
-                href="https://www.themoviedb.org/settings/api"
-                target="_blank"
-                rel="noreferrer"
-                className="text-am hover:underline inline-flex items-center gap-1"
-              >
-                Get a free TMDb API key <ExternalLink size={11} />
-              </a>
-              {apiKey && (
-                <button
-                  onClick={() => { setKeyInput(''); setApiKey(''); localStorage.removeItem('cinevault_tmdb_key'); toast('API Key removed'); }}
-                  className="text-red-400 hover:underline"
-                >
-                  Clear Key
-                </button>
-              )}
-            </div>
-
-            <div className="flex gap-2.5 pt-2">
-              <button
-                onClick={() => setShowKeyModal(false)}
-                className="flex-1 py-2.5 rounded-full bg-s2 text-xs font-medium hover:bg-s3 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveApiKey}
-                disabled={keyValidating}
-                className="flex-1 py-2.5 rounded-full bg-am text-[#111] font-bold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                {keyValidating ? (
-                  <>
-                    <RefreshCw size={13} className="animate-spin" /> Verifying...
-                  </>
-                ) : (
-                  'Test & Save'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ═══════════════════════════════════
   // MAIN RENDER
   // ═══════════════════════════════════
   return (
@@ -1601,7 +1393,6 @@ export default function App() {
       {view === "feed" && renderFeed()}
       {view === "detail" && renderDetail()}
       {renderSheet()}
-      {renderKeyModal()}
 
       {/* Toast Notification */}
       <div className={`fixed left-1/2 z-[60] bg-s3 border border-white/[0.08] py-2.5 px-[18px] rounded-full text-sm transition-all duration-300 pointer-events-none ${
