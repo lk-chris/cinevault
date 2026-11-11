@@ -158,10 +158,12 @@ const ini = (n: string) => n.split(" ").map(w => w[0]).join("").slice(0, 2);
 type View = "onboarding" | "feed" | "detail";
 type Tab = "tonight" | "wl" | "wd";
 
+const DEFAULT_TMDB_KEY = 'a69878c434bec64f12cee0ffb2aff577';
+
 export default function App() {
   // ─── API KEY & TMDB STATE ───
   const [apiKey, setApiKey] = useState<string>(() => {
-    return localStorage.getItem('cinevault_tmdb_key') || import.meta.env.VITE_TMDB_API_KEY || '';
+    return localStorage.getItem('cinevault_tmdb_key') || import.meta.env.VITE_TMDB_API_KEY || DEFAULT_TMDB_KEY;
   });
   const [keyInput, setKeyInput] = useState<string>(apiKey);
   const [keyValidating, setKeyValidating] = useState(false);
