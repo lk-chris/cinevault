@@ -88,7 +88,7 @@ const TIME_SVGS: Record<string, React.ReactNode> = {
 
 interface StepOpt { id: string; label: string; desc?: string; }
 interface StepGroup { key: string; label?: string; min: number; max: number; opts: StepOpt[]; }
-interface ScreenDef { h: string; s: string; step: number; type: "tiles"|"pills"; layout?: "posters"|"posters_3"|"svg_time"; groups: StepGroup[]; }
+interface ScreenDef { h: string; s: string; step: number; type: "tiles"|"pills"; layout?: "posters"|"svg_time"; groups: StepGroup[]; }
 
 const SCREENS: ScreenDef[] = [
   { h: "What are you watching tonight?", s: "Choose one.", step: 1, type: "tiles", layout: "posters",
@@ -117,7 +117,7 @@ const SCREENS: ScreenDef[] = [
       { id: "e",   label: "Epic",        desc: "2.5 hours or more" },
       { id: "any", label: "Any runtime", desc: "No limit" },
     ]}]},
-  { h: "Who's watching?", s: "We'll filter by content rating.", step: 5, type: "tiles", layout: "posters_3",
+  { h: "Who's watching?", s: "We'll filter by content rating.", step: 5, type: "tiles", layout: "posters",
     groups: [{ key: "age", min: 1, max: 1, opts: [
       { id: "solo", label: "Solo / adults only", desc: "R and mature content allowed" },
       { id: "date", label: "Date night",        desc: "PG-13 or R, thrilling or romantic" },
@@ -325,16 +325,6 @@ export default function App() {
     return sc.groups.every(g => sel[g.key].size >= g.min);
   };
 
-  const counterText = () => {
-    if (!sc) return "";
-    const g0 = sc.groups[0];
-    const n = sc.groups.reduce((a, g) => a + sel[g.key].size, 0);
-    if (g0.min === 0) return n ? <><b>{n}</b> picked</> : "Optional";
-    if (g0.max === 1)  return n ? "" : "Choose one";
-    if (g0.max < 99)   return n ? <><b>{n}</b> of {g0.max} picked</> : "Choose at least one";
-    return n < g0.min ? <><b>{n}</b> picked, {g0.min - n} more to go</> : <><b>{n}</b> picked</>;
-  };
-
   const goText = () => {
     if (cur >= SCREENS.length) return "Open my feed";
     if (cur === SCREENS.length - 1) return "Curate my feed";
@@ -482,34 +472,31 @@ export default function App() {
   // ═══════════════════════════════════
   const renderOnboarding = () => (
     <div className="min-h-screen bg-bg text-white flex flex-col">
-      <div className="w-full max-w-[760px] mx-auto px-[18px] pt-[18px] pb-[190px]">
-        {/* top bar */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      {/* Sticky Top Header: Brand, Skip, Progress Bar (locks to top while scrolling) */}
+      <header className="sticky top-0 z-30 bg-[#0A0A0C]/95 backdrop-blur-md border-b border-white/[0.08] px-[18px] pt-[max(14px,env(safe-area-inset-top))] pb-3">
+        <div className="w-full max-w-[760px] mx-auto">
+          <div className="flex items-center justify-between">
             <div className="text-xl font-light tracking-tight">Cine<b className="text-am font-bold">Vault</b></div>
-            <button
-              onClick={() => showFeed("tonight")}
-              className="px-2.5 py-1 rounded-full bg-s1 border border-white/10 text-xs text-t2 hover:text-white hover:border-white/20 transition-colors"
-            >
-              Exit to Home
-            </button>
+            {sc && (
+              <button onClick={skip} className="text-t2 text-sm py-1 px-3 rounded-full hover:text-white hover:bg-white/[0.08] transition-colors">
+                Skip
+              </button>
+            )}
           </div>
-          {sc && (
-            <button onClick={skip} className="text-t2 text-sm py-1.5 px-2 hover:text-white transition-colors">
-              Skip
-            </button>
-          )}
-        </div>
 
-        {/* progress bar */}
-        <div className="flex gap-1.5 mt-[18px] mb-[26px]">
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-            <i key={i} className={`flex-1 h-1 rounded-full not-italic transition-colors ${i < (sc ? sc.step : TOTAL_STEPS) ? "bg-am" : "bg-s2"}`} />
-          ))}
+          {/* Progress Bar Segments */}
+          <div className="flex gap-1.5 mt-3">
+            {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+              <i key={i} className={`flex-1 h-1 rounded-full not-italic transition-colors ${i < (sc ? sc.step : TOTAL_STEPS) ? "bg-am" : "bg-s2"}`} />
+            ))}
+          </div>
         </div>
+      </header>
 
+      {/* Main scrolling content (pushes smoothly under sticky header) */}
+      <div className="w-full max-w-[760px] mx-auto px-[18px] pt-6 pb-[160px] flex-1">
         {/* heading */}
-        <h1 className="text-[clamp(30px,7vw,44px)] font-bold leading-[1.03] tracking-tight mb-2">
+        <h1 className="text-[clamp(28px,6.5vw,42px)] font-bold leading-[1.05] tracking-tight mb-2">
           {sc ? sc.h : "Here's your vibe for tonight"}
         </h1>
         <p className="text-t2 text-base mb-6">
@@ -524,12 +511,8 @@ export default function App() {
                 {g.label && <div className="text-t2 text-sm mb-2.5">{g.label}</div>}
 
                 {/* POSTER TILES (Format, Mood, Who's watching) */}
-                {sc.type === "tiles" && (sc.layout === "posters" || sc.layout === "posters_3") && (
-                  <div className={`grid gap-3 ${
-                    sc.layout === "posters_3"
-                      ? "grid-cols-3"
-                      : "grid-cols-2 sm:grid-cols-3"
-                  }`}>
+                {sc.type === "tiles" && sc.layout === "posters" && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {g.opts.map((o) => {
                       const on = sel[g.key].has(o.id);
                       const posterUrl = CARD_POSTERS[o.id];
@@ -667,28 +650,60 @@ export default function App() {
         )}
       </div>
 
-      {/* Onboarding action bar positioned right above bottom nav */}
-      <div className="fixed left-0 right-0 bottom-[56px] pt-4 px-[18px] pb-3 bg-gradient-to-t from-bg via-bg/95 to-transparent flex justify-center z-30">
-        <div className="w-full max-w-[760px] flex items-center gap-3">
-          {cur > 0 && (
-            <button onClick={back} className="py-[12px] px-[20px] rounded-full bg-s2 border border-white/[0.08] text-sm hover:bg-s3 transition-colors flex items-center gap-1">
-              <ArrowLeft size={15} /> Back
+      {/* Unified Fixed Bottom Bar (Action row + Nav bar, ZERO clipping) */}
+      <div className="fixed left-0 right-0 bottom-0 z-40 bg-[#141519]/[0.98] border-t border-white/[0.08] backdrop-blur-md">
+        {/* Onboarding Action Row: Back & Continue */}
+        <div className="w-full max-w-[760px] mx-auto px-4 py-2.5 flex items-center justify-between">
+          {cur > 0 ? (
+            <button
+              onClick={back}
+              className="py-2.5 px-5 rounded-full bg-s2 border border-white/[0.08] text-sm text-white hover:bg-s3 transition-colors flex items-center gap-1.5 active:scale-95"
+            >
+              <ArrowLeft size={16} /> Back
             </button>
+          ) : (
+            <div />
           )}
-          <div className="flex-1 text-t2 text-sm">{counterText()}</div>
-          <button onClick={next} disabled={!stepValid()}
-            className={`py-[12px] px-[28px] rounded-full font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
+
+          <button
+            onClick={next}
+            disabled={!stepValid()}
+            className={`py-2.5 px-7 rounded-full font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 active:scale-95 ${
               stepValid()
-                ? "bg-am text-[#111] hover:brightness-110"
+                ? "bg-am text-[#111] hover:brightness-110 shadow-lg shadow-am/10"
                 : "bg-s2 text-[#6B7280] cursor-not-allowed"
-            }`}>
+            }`}
+          >
             {goText()} <ArrowRight size={16} />
           </button>
         </div>
-      </div>
 
-      {/* Persistent Bottom Nav */}
-      {renderBottomNav("vibe")}
+        {/* Persistent Bottom Nav below action row */}
+        <nav className="flex justify-around border-t border-white/[0.06] py-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))]">
+          {([["tonight","Tonight",<Moon size={19}/>],["wl","Watchlist",<Bookmark size={19}/>],["wd","Watched",<Eye size={19}/>]] as [Tab,string,React.ReactNode][]).map(([k,lbl,icon]) => (
+            <button
+              key={k}
+              onClick={() => showFeed(k)}
+              className="relative flex flex-col items-center gap-0.5 font-mono text-[10px] min-w-[60px] text-t2 hover:text-white transition-colors"
+            >
+              {icon}
+              {k === "wl" && wl.size > 0 && (
+                <i className="absolute -top-1 left-[calc(50%+5px)] min-w-4 h-4 px-1 rounded-full bg-am text-[#111] font-mono font-medium text-[9px] leading-4 text-center not-italic">{wl.size}</i>
+              )}
+              {k === "wd" && wd.size > 0 && (
+                <i className="absolute -top-1 left-[calc(50%+5px)] min-w-4 h-4 px-1 rounded-full bg-white/20 text-white font-mono font-medium text-[9px] leading-4 text-center not-italic">{wd.size}</i>
+              )}
+              {lbl}
+            </button>
+          ))}
+          <button
+            onClick={openVibe}
+            className="flex flex-col items-center gap-0.5 font-mono text-[10px] min-w-[60px] text-am font-medium transition-colors"
+          >
+            <SlidersHorizontal size={19} />Vibe
+          </button>
+        </nav>
+      </div>
     </div>
   );
 
