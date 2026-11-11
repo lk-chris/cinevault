@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: #0A0A0C;
+  --s1: #141519;
+  --s2: #1C1D22;
+  --s3: #2A2B32;
+  --am: #F59E0B;
+  --glow: rgba(245, 158, 11, 0.35);
+  --bd: rgba(255, 255, 255, 0.08);
+  --t2: #9CA3AF;
+}
+
+body {
+  background-color: var(--bg);
+  color: #fff;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--s3);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--am);
+}
+
+/* Custom Abstract Patterns for Posters & Tiles */
+.p1 {
+  background: radial-gradient(circle at 24% 22%, rgba(253, 224, 130, 0.85), transparent 30%),
+              radial-gradient(circle at 72% 14%, rgba(253, 186, 116, 0.7), transparent 26%),
+              radial-gradient(circle at 78% 46%, rgba(252, 211, 77, 0.45), transparent 22%),
+              radial-gradient(circle at 36% 48%, rgba(251, 191, 36, 0.4), transparent 30%),
+              linear-gradient(160deg, #d97706, #78350f 60%, #1c0f05);
+}
+.p2 {
+  background: repeating-linear-gradient(115deg, transparent 0 22px, rgba(255, 255, 255, 0.11) 22px 24px, transparent 24px 52px, rgba(0, 0, 0, 0.28) 52px 56px),
+              linear-gradient(155deg, #f59e0b, #b91c1c 55%, #1c0a0a);
+}
+.p3 {
+  background: repeating-radial-gradient(circle at 70% 28%, rgba(255, 255, 255, 0.17) 0 2px, transparent 2px 22px),
+              linear-gradient(160deg, #6d28d9, #1e1b4b 70%);
+}
+.p4 {
+  background: linear-gradient(100deg, transparent 46%, rgba(245, 158, 11, 0.9) 46% 47.5%, transparent 47.5%),
+              linear-gradient(105deg, transparent 40%, rgba(245, 158, 11, 0.16) 46%, transparent 56%),
+              repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0 10px, transparent 10px 26px),
+              linear-gradient(170deg, #2b2b2f, #050506);
+}
+.p5 {
+  background: repeating-linear-gradient(100deg, rgba(186, 230, 253, 0.2) 0 1px, transparent 1px 14px),
+              radial-gradient(circle at 70% 25%, #7dd3fc, #0e7490 50%, #082f49);
+}
+.p6 {
+  background: repeating-conic-gradient(from 0deg at 50% 34%, rgba(255, 255, 255, 0.15) 0 6deg, transparent 6deg 14deg),
+              conic-gradient(from 200deg at 50% 38%, #fbbf24, #ea580c, #7c2d12, #fbbf24);
+}
