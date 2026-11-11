@@ -189,7 +189,7 @@ export function buildDiscoverUrl(
   url.searchParams.set('include_video', 'false');
   url.searchParams.set('language', 'en-US');
   url.searchParams.set('page', String(page));
-  url.searchParams.set('vote_count.gte', '100'); // Ensure notable, high quality titles
+  url.searchParams.set('vote_count.gte', '20'); // Balanced threshold for high variety and quality
   url.searchParams.set('sort_by', overrideSort || 'popularity.desc');
 
   // Format overrides
@@ -200,17 +200,6 @@ export function buildDiscoverUrl(
   // Genre IDs collection
   const genreIds: number[] = [];
 
-  // If anime selected
-  if (isAnime) {
-    genreIds.push(16); // Animation
-    url.searchParams.set('with_original_language', 'ja');
-  }
-
-  // If documentary selected
-  if (isDoc) {
-    genreIds.push(99); // Documentary
-  }
-
   // User selected genre pills
   if (filters.genre && filters.genre.size > 0) {
     filters.genre.forEach(gName => {
@@ -220,6 +209,20 @@ export function buildDiscoverUrl(
       }
     });
   }
+
+  // If anime format selected: restrict to Japanese language
+  if (isAnime) {
+    if (!genreIds.includes(16)) genreIds.push(16); // Animation
+    url.searchParams.set('with_original_language', 'ja');
+  }
+
+  // If documentary selected
+  if (isDoc) {
+    if (!genreIds.includes(99)) genreIds.push(99); // Documentary
+  }
+
+  // Check if user specifically requested Animation/Cartoons
+  const wantsAnimation = filters.genre?.has('Animation') || isAnime;
 
   // Mood mappings
   if (filters.mood && filters.mood.size > 0) {
@@ -243,11 +246,26 @@ export function buildDiscoverUrl(
     });
 
     if (withoutGenres.length > 0) {
-      url.searchParams.set('without_genres', withoutGenres.join(','));
+      // Prevent excluding any genre the user explicitly selected
+      const safeWithout = withoutGenres.filter(gStr => {
+        const ids = gStr.split(',').map(s => parseInt(s, 10));
+        return !ids.some(id => genreIds.includes(id));
+      });
+      if (safeWithout.length > 0) {
+        url.searchParams.set('without_genres', safeWithout.join(','));
+      }
     }
   }
 
-  if (genreIds.length > 0) {
+  if (wantsAnimation) {
+    // ANCHOR ANIMATION: 16 must be mandatory so live-action doesn't swamp the feed!
+    const otherGenres = genreIds.filter(id => id !== 16);
+    if (otherGenres.length > 0) {
+      url.searchParams.set('with_genres', `16,${otherGenres.join('|')}`);
+    } else {
+      url.searchParams.set('with_genres', '16');
+    }
+  } else if (genreIds.length > 0) {
     // Pipe-separated = OR (match any selected genre)
     url.searchParams.set('with_genres', genreIds.join('|'));
   }
@@ -267,11 +285,17 @@ export function buildDiscoverUrl(
   // Who's Watching / Age Certification
   if (!isTv && filters.age && filters.age.size > 0) {
     url.searchParams.set('certification_country', 'US');
-    if (filters.age.has('fam')) {
-      url.searchParams.set('certification.lte', 'PG-13');
+    if (filters.age.has('kids')) {
+      // Strict G & PG for pure family and cartoons
+      url.searchParams.set('certification', 'G|PG');
+    } else if (filters.age.has('fam')) {
+      // Teens / PG-13 blockbusters
+      url.searchParams.set('certification', 'PG-13');
     } else if (filters.age.has('solo')) {
-      url.searchParams.set('certification', 'R');
+      // Adults only (R)
+      url.searchParams.set('certification', 'R|NC-17');
     } else if (filters.age.has('date')) {
+      // Date night
       url.searchParams.set('certification', 'PG-13|R');
     }
   }
@@ -1216,37 +1240,52 @@ export async function fetchDiscoverMovies(
   }
 
   // Build the live TMDb API discover URL
-  const { url, headers, endpoint } = buildDiscoverUrl(trimmedKey, filters, page, overrideType, overrideSort);
+  const { url: url1, headers, endpoint } = buildDiscoverUrl(trimmedKey, filters, page, overrideType, overrideSort);
 
   try {
-    const res = await fetch(url, { headers });
-    if (!res.ok) {
-      console.warn(`TMDb API returned status ${res.status}, falling back to curated catalog`);
-      const curated = getCuratedMedia(filters, overrideType, overrideSort);
-      return {
-        results: curated,
-        totalPages: 1,
-        totalResults: curated.length,
-        source: 'curated',
-        endpoint,
-      };
+    // For page 1, fetch page 1 and page 2 concurrently to provide 40 high-quality titles to browse
+    const fetches: Promise<Response>[] = [fetch(url1, { headers })];
+    if (page === 1) {
+      const { url: url2 } = buildDiscoverUrl(trimmedKey, filters, 2, overrideType, overrideSort);
+      fetches.push(fetch(url2, { headers }));
     }
 
-    const data = await res.json();
-    const rawItems: TMDbMovieResult[] = data.results || [];
-    const mapped: CinevaultMedia[] = rawItems
-      .filter(item => item.poster_path) // Require poster image for great card display
-      .map(item => mapTMDbItemToMedia(item, endpoint));
+    const responses = await Promise.all(fetches);
+    const allRawItems: TMDbMovieResult[] = [];
+    let totalPages = 1;
+    let totalResults = 0;
+
+    for (const res of responses) {
+      if (res.ok) {
+        const data = await res.json();
+        totalPages = data.total_pages || totalPages;
+        totalResults = data.total_results || totalResults;
+        if (data.results && Array.isArray(data.results)) {
+          allRawItems.push(...data.results);
+        }
+      }
+    }
+
+    // Deduplicate and filter items with posters
+    const seenIds = new Set<number>();
+    const mapped: CinevaultMedia[] = [];
+
+    for (const item of allRawItems) {
+      if (item && item.id && !seenIds.has(item.id) && item.poster_path) {
+        seenIds.add(item.id);
+        mapped.push(mapTMDbItemToMedia(item, endpoint));
+      }
+    }
 
     return {
-      results: mapped.length > 0 ? mapped : getCuratedMedia(filters, overrideType, overrideSort),
-      totalPages: data.total_pages || 1,
-      totalResults: data.total_results || mapped.length,
+      results: mapped,
+      totalPages,
+      totalResults: totalResults || mapped.length,
       source: 'tmdb',
       endpoint,
     };
   } catch (err) {
-    console.warn('Error querying TMDb discover API:', err);
+    console.warn('Error querying TMDb discover API (offline fallback):', err);
     const curated = getCuratedMedia(filters, overrideType, overrideSort);
     return {
       results: curated,

@@ -24,9 +24,10 @@ export const CARD_POSTERS: Record<string, string> = {
   blast: 'https://image.tmdb.org/t/p/w780/or06FN3Dka5tukK1e9sl16pB3iy.jpg', // Avengers: Endgame
 
   // Step 5: Who's watching
-  solo: 'https://image.tmdb.org/t/p/w780/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg', // Blade Runner 2049
+  kids: 'https://image.tmdb.org/t/p/w780/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg', // Inside Out 2 (G & PG)
+  fam: 'https://image.tmdb.org/t/p/w780/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg',  // Spider-Man (PG-13)
   date: 'https://image.tmdb.org/t/p/w780/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg', // Titanic
-  fam: 'https://image.tmdb.org/t/p/w780/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg'  // Inside Out 2
+  solo: 'https://image.tmdb.org/t/p/w780/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg'  // Blade Runner 2049
 };
 
 export const TIME_SVGS: Record<string, React.ReactNode> = {
@@ -136,9 +137,10 @@ export const SCREENS: ScreenDef[] = [
     layout: "posters",
     groups: [{
       key: "age", min: 1, max: 1, opts: [
-        { id: "solo", label: "Solo / adults only", desc: "R and mature content allowed" },
-        { id: "date", label: "Date night",        desc: "PG-13 or R, thrilling or romantic" },
-        { id: "fam",  label: "Family / kids safe", desc: "G, PG and PG-13 only" },
+        { id: "kids", label: "Kids & Family (G & PG)", desc: "Pure cartoons & family safe, G & PG only" },
+        { id: "fam",  label: "Teens & Family (PG-13)", desc: "PG-13 blockbusters, superhero & action" },
+        { id: "date", label: "Date night",            desc: "PG-13 or R, thrilling or romantic" },
+        { id: "solo", label: "Solo / adults only",     desc: "R and mature content (18+) allowed" },
       ]
     }]
   },

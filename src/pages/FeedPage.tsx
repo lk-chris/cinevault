@@ -15,6 +15,9 @@ export default function FeedPage({ tab }: FeedPageProps) {
   const {
     feedItems,
     feedLoading,
+    loadingMore,
+    hasMore,
+    loadMoreFeed,
     feedView,
     wl,
     wd,
@@ -69,6 +72,26 @@ export default function FeedPage({ tab }: FeedPageProps) {
             {currentList.map((item, idx) => (
               <MovieListCard key={item.id} item={item} isFirst={idx === 0} />
             ))}
+          </div>
+        )}
+
+        {/* Load More Titles Button */}
+        {tab === "tonight" && hasMore && currentList.length > 0 && (
+          <div className="flex justify-center mt-8 mb-4">
+            <button
+              onClick={loadMoreFeed}
+              disabled={loadingMore}
+              className="py-3 px-8 rounded-full bg-s2 border border-white/10 text-white font-mono text-xs font-semibold hover:bg-s3 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {loadingMore ? (
+                <>
+                  <div className="w-4 h-4 rounded-full border-2 border-am border-t-transparent animate-spin" />
+                  Loading more titles...
+                </>
+              ) : (
+                'Load more titles'
+              )}
+            </button>
           </div>
         )}
       </div>

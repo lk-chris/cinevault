@@ -33,7 +33,10 @@ interface AppContextType {
   skipStep: () => void;
   feedItems: CinevaultMedia[];
   feedLoading: boolean;
+  loadingMore: boolean;
+  hasMore: boolean;
   loadFeed: (customFilters?: Sel, customCat?: CategoryFilter, customSort?: SortFilter) => Promise<void>;
+  loadMoreFeed: () => Promise<void>;
   feedView: FeedView;
   setFeedView: React.Dispatch<React.SetStateAction<FeedView>>;
   categoryFilter: CategoryFilter;
@@ -76,6 +79,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [feedView, setFeedView] = useState<FeedView>("grid");
   const [feedItems, setFeedItems] = useState<CinevaultMedia[]>(CURATED_MEDIA_CATALOG);
   const [feedLoading, setFeedLoading] = useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [feedPage, setFeedPage] = useState<number>(1);
+  const [hasMore, setHasMore] = useState<boolean>(true);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [sortFilter, setSortFilter] = useState<SortFilter>('popularity.desc');
 
@@ -146,6 +152,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     customSort: SortFilter = sortFilter
   ) => {
     setFeedLoading(true);
+    setFeedPage(1);
+    setHasMore(true);
     try {
       const effectiveFilters: OnboardingFilters = {
         fmt: new Set(customFilters.fmt),
@@ -173,6 +181,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       );
 
       setFeedItems(res.results);
+      setHasMore(res.totalPages > 2 && res.results.length >= 10);
 
       setMediaRegistry(prev => {
         const next = new Map(prev);
@@ -186,6 +195,61 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFeedLoading(false);
     }
   }, [apiKey, sel, categoryFilter, sortFilter, toast]);
+
+  const loadMoreFeed = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = feedPage + 2;
+    try {
+      const effectiveFilters: OnboardingFilters = {
+        fmt: new Set(sel.fmt),
+        mood: new Set(sel.mood),
+        genre: new Set(sel.genre),
+        time: new Set(sel.time),
+        age: new Set(sel.age),
+        era: new Set(sel.era),
+        lang: new Set(sel.lang),
+      };
+
+      let overrideType: 'movie' | 'tv' | undefined = undefined;
+      if (categoryFilter === 'movie') overrideType = 'movie';
+      if (categoryFilter === 'tv') overrideType = 'tv';
+      if (categoryFilter === 'anime') {
+        effectiveFilters.fmt.add('anime');
+      }
+
+      const res = await fetchDiscoverMovies(
+        apiKey,
+        effectiveFilters,
+        nextPage,
+        overrideType,
+        sortFilter
+      );
+
+      if (res.results.length === 0) {
+        setHasMore(false);
+      } else {
+        setFeedItems(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newItems = res.results.filter(r => !existingIds.has(r.id));
+          return [...prev, ...newItems];
+        });
+        setFeedPage(nextPage);
+        setHasMore(nextPage < res.totalPages);
+
+        setMediaRegistry(prev => {
+          const next = new Map(prev);
+          res.results.forEach(item => next.set(item.id, item));
+          return next;
+        });
+      }
+    } catch (e) {
+      console.warn('Error loading more:', e);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, feedPage, sel, categoryFilter, sortFilter, apiKey]);
 
   // Initial feed load
   useEffect(() => {
@@ -349,7 +413,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     skipStep,
     feedItems,
     feedLoading,
+    loadingMore,
+    hasMore,
     loadFeed,
+    loadMoreFeed,
     feedView,
     setFeedView,
     categoryFilter,
