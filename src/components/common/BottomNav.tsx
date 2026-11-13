@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Moon, Bookmark, Eye, SlidersHorizontal } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { SCREENS } from '../../constants/vibeData';
 
 export default function BottomNav() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function BottomNav() {
   ];
 
   const handleVibeClick = () => {
-    setCur(0);
+    setCur(SCREENS.length);
     navigate('/vibe');
   };
 

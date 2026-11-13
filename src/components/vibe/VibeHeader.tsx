@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { TOTAL_STEPS, SCREENS } from '../../constants/vibeData';
 
 export default function VibeHeader() {
-  const { cur, skipStep } = useApp();
+  const { cur, skipStep, hasCurated } = useApp();
   const sc = cur < SCREENS.length ? SCREENS[cur] : null;
 
   return (
@@ -25,14 +25,17 @@ export default function VibeHeader() {
 
         {/* Progress Bar Segments */}
         <div className="flex gap-1.5 mt-3">
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-            <i
-              key={i}
-              className={`flex-1 h-1 rounded-full not-italic transition-colors ${
-                i < (sc ? sc.step : TOTAL_STEPS) ? "bg-am" : "bg-s2"
-              }`}
-            />
-          ))}
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => {
+            const isFilled = sc ? i < sc.step : hasCurated;
+            return (
+              <i
+                key={i}
+                className={`flex-1 h-1 rounded-full not-italic transition-colors ${
+                  isFilled ? "bg-am" : "bg-s2"
+                }`}
+              />
+            );
+          })}
         </div>
       </div>
     </header>

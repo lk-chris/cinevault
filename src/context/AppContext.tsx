@@ -31,6 +31,8 @@ interface AppContextType {
   nextStep: (onComplete?: () => void) => void;
   backStep: () => void;
   skipStep: () => void;
+  hasCurated: boolean;
+  resetVibe: (onComplete?: () => void) => void;
   feedItems: CinevaultMedia[];
   feedLoading: boolean;
   loadingMore: boolean;
@@ -308,6 +310,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     window.scrollTo(0, 0);
   };
 
+  const hasCurated = Object.values(sel).some(s => s && s.size > 0);
+
+  const resetVibe = useCallback((onComplete?: () => void) => {
+    const fresh = initSel();
+    setSel(fresh);
+    setCur(0);
+    loadFeed(fresh);
+    toast("Feed and vibe reset");
+    if (onComplete) onComplete();
+    window.scrollTo(0, 0);
+  }, [loadFeed, toast]);
+
   // ─── DETAIL & REGISTRY HELPERS ───
   const getMediaById = (id: number): CinevaultMedia | undefined => {
     return mediaRegistry.get(id);
@@ -411,6 +425,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     nextStep,
     backStep,
     skipStep,
+    hasCurated,
+    resetVibe,
     feedItems,
     feedLoading,
     loadingMore,
