@@ -274,47 +274,13 @@ export default function DetailPage() {
             {media.genres.join(', ')}
           </div>
 
-          {/* Where to Watch Section with Direct Service Links */}
-          <div className="my-3 p-3.5 rounded-2xl bg-s1 border border-white/[0.08]">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="font-mono text-[11px] text-[#6B7280] uppercase tracking-wider flex items-center gap-1.5">
-                <Play size={13} className="text-am" fill="currentColor" /> Where to watch
-              </span>
-              {(providers.rent?.length > 0 || providers.buy?.length > 0) && (
-                <button
-                  onClick={openWatchSheet}
-                  className="font-mono text-[11px] text-am hover:underline cursor-pointer"
-                >
-                  Rent / Buy options
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {providers.stream && providers.stream.length > 0 ? (
-                providers.stream.map(s => (
-                  <a
-                    key={s}
-                    href={getWatchProviderUrl(s, media.title)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3.5 py-2 rounded-xl bg-s2 border border-white/10 hover:border-am/50 text-xs font-medium text-white flex items-center gap-2 transition-all hover:bg-white/[0.06] active:scale-95 group cursor-pointer"
-                  >
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 group-hover:scale-125 transition-transform" />
-                    <span>{s}</span>
-                    <ExternalLink size={12} className="text-t2 group-hover:text-am transition-colors ml-0.5" />
-                  </a>
-                ))
-              ) : (
-                <button
-                  onClick={openWatchSheet}
-                  className="text-xs font-mono text-t2 hover:text-white cursor-pointer"
-                >
-                  View all options
-                </button>
-              )}
-            </div>
-          </div>
+          {/* Where to Watch Button */}
+          <button
+            onClick={openWatchSheet}
+            className="w-full h-[45px] rounded-full bg-white text-[#111] font-semibold text-sm inline-flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors mb-2.5 font-mono cursor-pointer"
+          >
+            <Play size={16} fill="currentColor" /> Where to watch
+          </button>
 
           {/* Watch status dropdown */}
           <label className="relative flex items-center gap-2.5 h-11 px-[18px] rounded-full bg-s1 border border-white/[0.08] font-mono text-sm my-2.5 cursor-pointer hover:border-white/20 transition-colors">
