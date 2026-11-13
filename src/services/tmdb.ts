@@ -55,6 +55,59 @@ export interface CinevaultMedia {
   };
 }
 
+export function getWatchProviderUrl(providerName: string, title: string): string {
+  const p = providerName.toLowerCase();
+  const q = encodeURIComponent(title);
+
+  if (p.includes('netflix')) {
+    return `https://www.netflix.com/search?q=${q}`;
+  }
+  if (p.includes('prime') || p.includes('amazon')) {
+    return `https://www.amazon.com/s?k=${q}&i=instant-video`;
+  }
+  if (p.includes('apple')) {
+    return `https://tv.apple.com/search?term=${q}`;
+  }
+  if (p.includes('disney')) {
+    return `https://www.disneyplus.com/search?q=${q}`;
+  }
+  if (p.includes('max') || p.includes('hbo')) {
+    return `https://www.max.com/search?q=${q}`;
+  }
+  if (p.includes('hulu')) {
+    return `https://www.hulu.com/search?q=${q}`;
+  }
+  if (p.includes('peacock')) {
+    return `https://www.peacocktv.com/search?q=${q}`;
+  }
+  if (p.includes('paramount')) {
+    return `https://www.paramountplus.com/search/?q=${q}`;
+  }
+  if (p.includes('crunchyroll')) {
+    return `https://www.crunchyroll.com/search?q=${q}`;
+  }
+  if (p.includes('youtube')) {
+    return `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' movie')}`;
+  }
+  if (p.includes('google')) {
+    return `https://play.google.com/store/search?q=${q}&c=movies`;
+  }
+  if (p.includes('vudu') || p.includes('fandango')) {
+    return `https://www.vudu.com/content/movies/search?minVisible=0&searchString=${q}`;
+  }
+  if (p.includes('tubi')) {
+    return `https://tubitv.com/search/${q}`;
+  }
+  if (p.includes('pluto')) {
+    return `https://pluto.tv/search/details?q=${q}`;
+  }
+  if (p.includes('criterion')) {
+    return `https://www.criterionchannel.com/search?q=${q}`;
+  }
+
+  return `https://www.google.com/search?q=${encodeURIComponent(`watch ${title} on ${providerName}`)}`;
+}
+
 // Map genre names to TMDb genre IDs (Movies and TV)
 export const GENRE_TO_TMDB_ID: Record<string, number> = {
   action: 28,
