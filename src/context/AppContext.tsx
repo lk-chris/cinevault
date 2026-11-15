@@ -68,31 +68,184 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | null>(null);
 
+function serializeSel(s: Sel): string {
+  const plain: Record<string, string[]> = {};
+  for (const [k, v] of Object.entries(s)) {
+    plain[k] = Array.from(v || []);
+  }
+  return JSON.stringify(plain);
+}
+
+function deserializeSel(json: string | null): Sel {
+  const base = initSel();
+  if (!json) return base;
+  try {
+    const parsed = JSON.parse(json);
+    if (parsed && typeof parsed === 'object') {
+      for (const [k, v] of Object.entries(parsed)) {
+        if (Array.isArray(v)) {
+          base[k] = new Set(v as string[]);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to parse saved vibe sel:', e);
+  }
+  return base;
+}
+
+function loadSavedMediaRegistry(): Map<number, CinevaultMedia> {
+  const map = new Map<number, CinevaultMedia>();
+  CURATED_MEDIA_CATALOG.forEach(m => map.set(m.id, m));
+  try {
+    const savedFeed = localStorage.getItem('cinevault_feed_items');
+    if (savedFeed) {
+      const parsedFeed: CinevaultMedia[] = JSON.parse(savedFeed);
+      if (Array.isArray(parsedFeed)) {
+        parsedFeed.forEach(m => {
+          if (m && m.id) map.set(m.id, m);
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse cached feed items for registry:', e);
+  }
+  try {
+    const savedReg = localStorage.getItem('cinevault_media_registry');
+    if (savedReg) {
+      const parsedReg: CinevaultMedia[] = JSON.parse(savedReg);
+      if (Array.isArray(parsedReg)) {
+        parsedReg.forEach(m => {
+          if (m && m.id) map.set(m.id, m);
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse saved media registry:', e);
+  }
+  return map;
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [apiKey] = useState<string>(() => {
     return localStorage.getItem('cinevault_tmdb_key') || import.meta.env.VITE_TMDB_API_KEY || DEFAULT_TMDB_KEY;
   });
 
-  // ─── ONBOARDING STATE ───
-  const [cur, setCur] = useState(0);
-  const [sel, setSel] = useState<Sel>(initSel);
+  // ─── ONBOARDING / VIBE STATE ───
+  const [sel, setSel] = useState<Sel>(() => {
+    return deserializeSel(localStorage.getItem('cinevault_vibe_sel'));
+  });
+
+  const [cur, setCur] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('cinevault_vibe_cur');
+      if (saved !== null) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= SCREENS.length) {
+          return parsed;
+        }
+      }
+    } catch {}
+    const savedSel = localStorage.getItem('cinevault_vibe_sel');
+    if (savedSel) {
+      const parsed = deserializeSel(savedSel);
+      if (Object.values(parsed).some(s => s && s.size > 0)) {
+        return SCREENS.length;
+      }
+    }
+    return 0;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_vibe_sel', serializeSel(sel));
+    } catch (e) {
+      console.warn('Failed to persist vibe selections:', e);
+    }
+  }, [sel]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_vibe_cur', String(cur));
+    } catch (e) {
+      console.warn('Failed to persist vibe step:', e);
+    }
+  }, [cur]);
 
   // ─── FEED STATE ───
-  const [feedView, setFeedView] = useState<FeedView>("grid");
-  const [feedItems, setFeedItems] = useState<CinevaultMedia[]>(CURATED_MEDIA_CATALOG);
+  const [feedView, setFeedView] = useState<FeedView>(() => {
+    return (localStorage.getItem('cinevault_feed_view') as FeedView) || 'grid';
+  });
+
+  const [feedItems, setFeedItems] = useState<CinevaultMedia[]>(() => {
+    try {
+      const saved = localStorage.getItem('cinevault_feed_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse saved feed items:', e);
+    }
+    return CURATED_MEDIA_CATALOG;
+  });
+
   const [feedLoading, setFeedLoading] = useState<boolean>(false);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [feedPage, setFeedPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
-  const [sortFilter, setSortFilter] = useState<SortFilter>('popularity.desc');
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(() => {
+    return (localStorage.getItem('cinevault_category_filter') as CategoryFilter) || 'all';
+  });
+  const [sortFilter, setSortFilter] = useState<SortFilter>(() => {
+    return (localStorage.getItem('cinevault_sort_filter') as SortFilter) || 'popularity.desc';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_feed_view', feedView);
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [feedView]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_feed_items', JSON.stringify(feedItems));
+    } catch (e) {
+      console.warn('Failed to persist feed items:', e);
+    }
+  }, [feedItems]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_category_filter', categoryFilter);
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_sort_filter', sortFilter);
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [sortFilter]);
 
   // Media Registry for Watchlist & Watched items
-  const [mediaRegistry, setMediaRegistry] = useState<Map<number, CinevaultMedia>>(() => {
-    const map = new Map<number, CinevaultMedia>();
-    CURATED_MEDIA_CATALOG.forEach(m => map.set(m.id, m));
-    return map;
-  });
+  const [mediaRegistry, setMediaRegistry] = useState<Map<number, CinevaultMedia>>(loadSavedMediaRegistry);
+
+  useEffect(() => {
+    try {
+      const items = Array.from(mediaRegistry.values()).slice(-120);
+      localStorage.setItem('cinevault_media_registry', JSON.stringify(items));
+    } catch (e) {
+      console.warn('Failed to persist media registry:', e);
+    }
+  }, [mediaRegistry]);
 
   // Watchlist & Watched persistence
   const [wl, setWl] = useState<Set<number>>(() => {
@@ -130,10 +283,73 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [wd]);
 
   // Detail item interaction states
-  const [lk, setLk] = useState<Set<number>>(() => new Set());
-  const [watchSt, setWatchSt] = useState<Record<number, string>>({});
-  const [rates, setRates] = useState<Record<number, number>>({});
-  const [revs, setRevs] = useState<Record<number, string[]>>({});
+  const [lk, setLk] = useState<Set<number>>(() => {
+    try {
+      const saved = localStorage.getItem('cinevault_lk');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  const [watchSt, setWatchSt] = useState<Record<number, string>>(() => {
+    try {
+      const saved = localStorage.getItem('cinevault_watch_st');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [rates, setRates] = useState<Record<number, number>>(() => {
+    try {
+      const saved = localStorage.getItem('cinevault_rates');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [revs, setRevs] = useState<Record<number, string[]>>(() => {
+    try {
+      const saved = localStorage.getItem('cinevault_revs');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_lk', JSON.stringify(Array.from(lk)));
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [lk]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_watch_st', JSON.stringify(watchSt));
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [watchSt]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_rates', JSON.stringify(rates));
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [rates]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cinevault_revs', JSON.stringify(revs));
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [revs]);
 
   // ─── SHEET MODAL STATE ───
   const [sheetContent, setSheetContent] = useState<React.ReactNode | null>(null);
@@ -291,8 +507,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const nextStep = (onComplete?: () => void) => {
-    if (cur < SCREENS.length) {
+    if (cur < SCREENS.length - 1) {
       setCur(c => c + 1);
+    } else if (cur === SCREENS.length - 1) {
+      // User clicked "Curate my feed" on the final question step
+      setCur(c => c + 1);
+      loadFeed();
     } else {
       if (onComplete) onComplete();
       loadFeed();
@@ -316,7 +536,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const fresh = initSel();
     setSel(fresh);
     setCur(0);
-    loadFeed(fresh);
+    try {
+      localStorage.removeItem('cinevault_vibe_sel');
+      localStorage.removeItem('cinevault_vibe_cur');
+      localStorage.removeItem('cinevault_feed_items');
+      localStorage.removeItem('cinevault_category_filter');
+      localStorage.removeItem('cinevault_sort_filter');
+    } catch (e) {
+      console.warn('Failed to clear vibe storage:', e);
+    }
+    loadFeed(fresh, 'all', 'popularity.desc');
     toast("Feed and vibe reset");
     if (onComplete) onComplete();
     window.scrollTo(0, 0);
