@@ -130,6 +130,28 @@ export const GENRE_TO_TMDB_ID: Record<string, number> = {
   western: 37,
 };
 
+// Distinct genre IDs specifically used by TMDb for TV shows
+export const TV_GENRE_TO_TMDB_ID: Record<string, number> = {
+  action: 10759,       // In TV: 'Action & Adventure' (ID 28/12 do not exist for TV)
+  adventure: 10759,    // In TV: 'Action & Adventure'
+  animation: 16,
+  comedy: 35,
+  crime: 80,
+  documentary: 99,
+  drama: 18,
+  family: 10751,
+  fantasy: 10765,      // In TV: 'Sci-Fi & Fantasy' (ID 878/14 do not exist for TV)
+  history: 36,
+  horror: 27,
+  music: 10402,
+  mystery: 9648,
+  romance: 10749,
+  'sci-fi': 10765,     // In TV: 'Sci-Fi & Fantasy'
+  thriller: 53,
+  war: 10768,          // In TV: 'War & Politics' (ID 10752 does not exist for TV)
+  western: 37,
+};
+
 export const TMDB_ID_TO_GENRE: Record<number, string> = {
   28: 'Action',
   12: 'Adventure',
@@ -139,6 +161,7 @@ export const TMDB_ID_TO_GENRE: Record<number, string> = {
   99: 'Documentary',
   18: 'Drama',
   10751: 'Family',
+  10762: 'Kids',
   14: 'Fantasy',
   36: 'History',
   27: 'Horror',
@@ -179,6 +202,35 @@ export const MOOD_QUERY_PARAMS: Record<string, { with_genres?: string; without_g
   },
   blast: {
     with_genres: '28,12,878',
+    sort_by: 'popularity.desc',
+  },
+};
+
+export const TV_MOOD_QUERY_PARAMS: Record<string, { with_genres?: string; without_genres?: string; sort_by?: string }> = {
+  brain: {
+    with_genres: '35,10751,10762',
+    without_genres: '27,53,18',
+    sort_by: 'popularity.desc',
+  },
+  edge: {
+    with_genres: '53,10759',
+    sort_by: 'popularity.desc',
+  },
+  mind: {
+    with_genres: '10765,9648',
+    sort_by: 'vote_average.desc',
+  },
+  dark: {
+    with_genres: '80,53,27',
+    without_genres: '35,10751,10762',
+    sort_by: 'popularity.desc',
+  },
+  tear: {
+    with_genres: '18,10749',
+    sort_by: 'vote_average.desc',
+  },
+  blast: {
+    with_genres: '10759,10765',
     sort_by: 'popularity.desc',
   },
 };
@@ -253,10 +305,11 @@ export function buildDiscoverUrl(
   // Genre IDs collection
   const genreIds: number[] = [];
 
-  // User selected genre pills
+  // User selected genre pills (differentiating TV vs Movie taxonomy)
   if (filters.genre && filters.genre.size > 0) {
     filters.genre.forEach(gName => {
-      const gId = GENRE_TO_TMDB_ID[gName.toLowerCase()];
+      const gLower = gName.toLowerCase();
+      const gId = isTv ? (TV_GENRE_TO_TMDB_ID[gLower] || GENRE_TO_TMDB_ID[gLower]) : GENRE_TO_TMDB_ID[gLower];
       if (gId && !genreIds.includes(gId)) {
         genreIds.push(gId);
       }
@@ -281,7 +334,7 @@ export function buildDiscoverUrl(
   if (filters.mood && filters.mood.size > 0) {
     const withoutGenres: string[] = [];
     filters.mood.forEach(m => {
-      const moodConfig = MOOD_QUERY_PARAMS[m];
+      const moodConfig = isTv ? (TV_MOOD_QUERY_PARAMS[m] || MOOD_QUERY_PARAMS[m]) : MOOD_QUERY_PARAMS[m];
       if (moodConfig) {
         if (moodConfig.with_genres) {
           moodConfig.with_genres.split(',').forEach(idStr => {
@@ -996,6 +1049,106 @@ export const CURATED_MEDIA_CATALOG: CinevaultMedia[] = [
     },
   },
   {
+    id: 246,
+    title: 'Avatar: The Last Airbender',
+    year: 2005,
+    rating: '8.8',
+    runtimeMinutes: 24,
+    certification: 'TV-Y7',
+    synopsis: 'In a war-torn world of elemental magic, a young boy reawakens to undertake a dangerous mystic quest to fulfill his destiny as the Avatar, and bring peace to the world.',
+    posterUrl: 'https://image.tmdb.org/t/p/w780/cHFZA87JuSpCz612wmv14T6IR8m.jpg',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/kU3tlIhxV425h4hL2gN7N4vE4x.jpg',
+    type: 'tv',
+    seasons: 3,
+    episodes: 61,
+    genres: ['Animation', 'Action & Adventure', 'Drama', 'Fantasy'],
+    director: 'Michael Dante DiMartino, Bryan Konietzko',
+    studios: ['Nickelodeon Animation Studios'],
+    cast: [
+      { name: 'Zach Tyler Eisen', role: 'Aang' },
+      { name: 'Mae Whitman', role: 'Katara' },
+      { name: 'Jack De Sena', role: 'Sokka' },
+      { name: 'Dante Basco', role: 'Zuko' },
+    ],
+    keywords: ['elemental', 'avatar', 'martial arts', 'airbender'],
+    country: ['United States'],
+    originalLanguage: 'EN',
+    releasedDate: '2005-02-21',
+    ratings: { tmdb: '8.8', tmdbVotes: '4,100', imdb: '9.3', rotten: '100%' },
+    trailerKey: 'd1EnW4kn1kg',
+    watchProviders: {
+      stream: ['Netflix', 'Paramount+'],
+      buy: ['Apple TV', 'Amazon Video'],
+      rent: [],
+    },
+  },
+  {
+    id: 94605,
+    title: 'Arcane',
+    year: 2021,
+    rating: '8.7',
+    runtimeMinutes: 42,
+    certification: 'TV-14',
+    synopsis: 'Amid the stark discord of twin cities Piltover and Zaun, two sisters fight on rival sides of a war between magic technologies and incompatible convictions.',
+    posterUrl: 'https://image.tmdb.org/t/p/w780/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/2DwjbP76P2q6kF8r73dYyJb9P7.jpg',
+    type: 'tv',
+    seasons: 2,
+    episodes: 18,
+    genres: ['Animation', 'Sci-Fi & Fantasy', 'Action & Adventure', 'Drama'],
+    director: 'Christian Linke, Alex Yee',
+    studios: ['Fortiche', 'Riot Games'],
+    cast: [
+      { name: 'Hailee Steinfeld', role: 'Vi' },
+      { name: 'Ella Purnell', role: 'Jinx' },
+      { name: 'Kevin Alejandro', role: 'Jayce' },
+    ],
+    keywords: ['steampunk', 'magic', 'sisters', 'riot'],
+    country: ['United States'],
+    originalLanguage: 'EN',
+    releasedDate: '2021-11-06',
+    ratings: { tmdb: '8.7', tmdbVotes: '4,500', imdb: '9.0', rotten: '100%' },
+    trailerKey: 'fXmAurh012s',
+    watchProviders: {
+      stream: ['Netflix'],
+      buy: [],
+      rent: [],
+    },
+  },
+  {
+    id: 40075,
+    title: 'Gravity Falls',
+    year: 2012,
+    rating: '8.6',
+    runtimeMinutes: 22,
+    certification: 'TV-Y7',
+    synopsis: 'Twin brother and sister Dipper and Mabel Pines are in for an unexpected adventure when they spend the summer helping their eccentric great uncle Stan run a tourist trap in the enigmatic town of Gravity Falls, Oregon.',
+    posterUrl: 'https://image.tmdb.org/t/p/w780/hB55A9Wc2eE8fO6qX7fUjZt2h5.jpg',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/nQhDqE7tW32Wz0Zc8Xf1jR8vQ1.jpg',
+    type: 'tv',
+    seasons: 2,
+    episodes: 40,
+    genres: ['Animation', 'Comedy', 'Mystery', 'Family'],
+    director: 'Alex Hirsch',
+    studios: ['Disney Television Animation'],
+    cast: [
+      { name: 'Jason Ritter', role: 'Dipper Pines' },
+      { name: 'Kristen Schaal', role: 'Mabel Pines' },
+      { name: 'Alex Hirsch', role: 'Grunkle Stan' },
+    ],
+    keywords: ['mystery', 'cryptid', 'twins', 'summer vacation'],
+    country: ['United States'],
+    originalLanguage: 'EN',
+    releasedDate: '2012-06-15',
+    ratings: { tmdb: '8.6', tmdbVotes: '3,100', imdb: '8.9', rotten: '100%' },
+    trailerKey: 'X2DUpDxFJyg',
+    watchProviders: {
+      stream: ['Disney+', 'Hulu'],
+      buy: ['Apple TV'],
+      rent: [],
+    },
+  },
+  {
     id: 155,
     title: 'The Dark Knight',
     year: 2008,
@@ -1232,11 +1385,15 @@ export function getCuratedMedia(
 
   // 3. Age / Who's watching
   if (filters.age && filters.age.size > 0) {
-    if (filters.age.has('fam')) {
-      list = list.filter(m => ['G', 'PG', 'PG-13', 'TV-14'].includes(m.certification));
+    if (filters.age.has('kids')) {
+      const kidsOnly = list.filter(m => ['G', 'PG', 'TV-Y', 'TV-Y7', 'TV-G', 'TV-PG'].includes(m.certification));
+      if (kidsOnly.length >= 2) list = kidsOnly;
+    } else if (filters.age.has('fam')) {
+      const famOnly = list.filter(m => ['G', 'PG', 'PG-13', 'TV-14', 'TV-Y', 'TV-Y7', 'TV-G', 'TV-PG'].includes(m.certification));
+      if (famOnly.length >= 2) list = famOnly;
     } else if (filters.age.has('solo')) {
       const matureOnly = list.filter(m => ['R', 'TV-MA'].includes(m.certification));
-      if (matureOnly.length >= 3) list = matureOnly;
+      if (matureOnly.length >= 2) list = matureOnly;
     }
   }
 

@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cinevault - Platform Overview & Technical Blueprint</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg: #0A0A0C;
+      --card-bg: #141519;
+      --card-inner: #1C1D22;
+      --border: rgba(255, 255, 255, 0.09);
+      --border-subtle: rgba(255, 255, 255, 0.05);
+      --text: #F3F4F6;
+      --text-muted: #9CA3AF;
+      --text-dim: #6B7280;
+      --amber: #F59E0B;
+      --amber-dark: #B45309;
+      --amber-glow: rgba(245, 158, 11, 0.15);
+      --blue: #38BDF8;
+      --emerald: #10B981;
+      --purple: #A855F7;
+      --rose: #F43F5E;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 8mm 11mm 8mm 11mm;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 9pt;
+      line-height: 1.35;
+    }
+
+    .page {
+      page-break-after: always;
+      page-break-inside: avoid;
+      position: relative;
+      height: 275mm;
+      max-height: 275mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      overflow: hidden;
+      padding-bottom: 2mm;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Header & Footer styling for pages */
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 2mm;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 3mm;
+      flex-shrink: 0;
+    }
+
+    .doc-logo {
+      font-size: 13pt;
+      font-weight: 300;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    .doc-logo b {
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    .doc-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7pt;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .doc-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 2mm;
+      border-top: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7pt;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .page-content {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Typography */
+    h1.page-title {
+      font-size: 17pt;
+      font-weight: 700;
+      letter-spacing: -0.6px;
+      line-height: 1.15;
+      color: #fff;
+      margin-bottom: 1.5mm;
+    }
+
+    p.page-subtitle {
+      font-size: 8.8pt;
+      color: var(--text-muted);
+      margin-bottom: 3mm;
+      line-height: 1.35;
+    }
+
+    h2.section-heading {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #fff;
+      margin-top: 2.5mm;
+      margin-bottom: 1.8mm;
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+    }
+
+    h2.section-heading::before {
+      content: '';
+      display: inline-block;
+      width: 3.5px;
+      height: 14px;
+      background: var(--amber);
+      border-radius: 2px;
+    }
+
+    /* Cards and Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5mm;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 3mm;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 3.5mm 4mm;
+    }
+
+    .card-title {
+      font-size: 10pt;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 1.5mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-body {
+      font-size: 8.8pt;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .card-highlight {
+      background: linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, var(--card-bg) 60%);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    /* Badges & Pills */
+    .badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5pt;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-amber {
+      background: var(--amber-glow);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-blue {
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--blue);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .badge-emerald {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-purple {
+      background: rgba(168, 85, 247, 0.12);
+      color: var(--purple);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    /* Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2mm;
+      margin-bottom: 3mm;
+      font-size: 8.5pt;
+    }
+
+    table.data-table th {
+      background: var(--card-inner);
+      color: #fff;
+      text-align: left;
+      padding: 2mm 2.5mm;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5pt;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    table.data-table td {
+      padding: 2mm 2.5mm;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+
+    table.data-table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    /* Code blocks */
+    code, pre {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    code {
+      background: var(--card-inner);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 8pt;
+      color: #FBBF24;
+      border: 1px solid var(--border-subtle);
+    }
+
+    pre.code-snippet {
+      background: #0D0E12;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 2.5mm 3.5mm;
+      font-size: 7.5pt;
+      color: #E5E7EB;
+      line-height: 1.4;
+      margin: 2mm 0;
+      overflow: hidden;
+    }
+
+    /* Flow Diagrams */
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 3mm;
+      margin-bottom: 2mm;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 2.5mm 3mm;
+    }
+
+    .flow-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--amber);
+      color: #111;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9pt;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .flow-info {
+      flex: 1;
+    }
+
+    .flow-title {
+      font-size: 9pt;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .flow-desc {
+      font-size: 8pt;
+      color: var(--text-muted);
+      margin-top: 0.5mm;
+    }
+
+    /* Stat Callout box */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3mm;
+      margin: 3mm 0 4mm 0;
+    }
+
+    .stat-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2.5mm 3mm;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 16pt;
+      font-weight: 800;
+      color: var(--amber);
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+      margin-bottom: 1mm;
+    }
+
+    .stat-label {
+      font-size: 7.5pt;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Architecture diagram box */
+    .arch-diagram {
+      background: #0F1015;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3mm;
+      margin: 3mm 0;
+    }
+
+    .arch-layer {
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      padding: 2mm 3mm;
+      margin-bottom: 2mm;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .arch-layer:last-child {
+      margin-bottom: 0;
+    }
+
+    .arch-layer-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5pt;
+      font-weight: 700;
+      color: var(--amber);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 1.5mm;
+    }
+
+    .arch-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5mm;
+    }
+
+    .arch-tag {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      padding: 1.5px 6px;
+      border-radius: 4px;
+      font-size: 7.5pt;
+      color: #E2E8F0;
+    }
+
+    /* Cover Page Specific */
+    .cover-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      min-height: 220mm;
+      padding: 10mm 5mm;
+    }
+
+    .cover-brand {
+      font-size: 38pt;
+      font-weight: 300;
+      letter-spacing: -1.5px;
+      margin-bottom: 1mm;
+    }
+
+    .cover-brand b {
+      color: var(--amber);
+      font-weight: 800;
+      text-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+    }
+
+    .cover-tagline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11pt;
+      color: var(--amber);
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      margin-bottom: 8mm;
+    }
+
+    .cover-divider {
+      width: 70px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--amber), transparent);
+      margin: 0 auto 8mm auto;
+    }
+
+    .cover-title {
+      font-size: 24pt;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #FFFFFF;
+      max-width: 170mm;
+      line-height: 1.2;
+      margin-bottom: 4mm;
+    }
+
+    .cover-desc {
+      font-size: 11pt;
+      color: var(--text-muted);
+      max-width: 145mm;
+      line-height: 1.5;
+      margin-bottom: 10mm;
+    }
+
+    .cover-metadata-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3mm;
+      width: 100%;
+      max-width: 150mm;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 4mm;
+      text-align: left;
+    }
+
+    .meta-item-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7pt;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .meta-item-value {
+      font-size: 9pt;
+      font-weight: 600;
+      color: #fff;
+      margin-top: 0.5mm;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= PAGE 1: COVER SLIDE ================= -->
+  <div class="page">
+    <div class="doc-header">
+      <div class="doc-logo">Cine<b>Vault</b></div>
+      <div class="doc-meta">Technical Presentation & Platform Guide</div>
+    </div>
+
+    <div class="page-content cover-container">
+      <div class="cover-brand">Cine<b>Vault</b></div>
+      <div class="cover-tagline">Mood-First Curation & Cinematic Discovery</div>
+      <div class="cover-divider"></div>
+
+      <h1 class="cover-title">Engineering Blueprint & Platform Architecture</h1>
+      <p class="cover-desc">
+        A comprehensive technical overview of Cinevault: the modern streaming discovery engine combining multi-factor emotional profiling, dynamic TMDb v3 query synthesis, resilient in-memory caching, and progressive fallback heuristics.
+      </p>
+
+      <div class="stat-row" style="width: 100%; max-width: 160mm;">
+        <div class="stat-box">
+          <div class="stat-num">6</div>
+          <div class="stat-label">Vibe Funnel Steps</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">40</div>
+          <div class="stat-label">Initial Title Density</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">O(1)</div>
+          <div class="stat-label">Registry Retrieval</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">10+</div>
+          <div class="stat-label">Streaming Direct Links</div>
+        </div>
+      </div>
+
+      <div class="cover-metadata-grid" style="margin-top: 6mm;">
+        <div>
+          <div class="meta-item-label">Target Audience</div>
+          <div class="meta-item-value">Engineering, Product & Stakeholders</div>
+        </div>
+        <div>
+          <div class="meta-item-label">Core Stack</div>
+          <div class="meta-item-value">React 19 · TypeScript · Vite 8</div>
+        </div>
+        <div>
+          <div class="meta-item-label">Document Version</div>
+          <div class="meta-item-value">1.0.0 Production Release</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      <span>Cinevault Platform Presentation</span>
+      <span>Confidential & Proprietary</span>
+      <span>Page 1 of 7</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 2: EXECUTIVE SUMMARY & USER JOURNEY ================= -->
+  <div class="page">
+    <div class="doc-header">
+      <div class="doc-logo">Cine<b>Vault</b></div>
+      <div class="doc-meta">Product Overview & User Experience</div>
+    </div>
+
+    <div class="page-content">
+      <h1 class="page-title">The Platform: Problem, Solution & User Journey</h1>
+      <p class="page-subtitle">
+        Cinevault tackles the modern "streaming paralysis" phenomenon: infinite catalog choice leading to decision fatigue. Instead of endless vertical scrolling, it offers an intentional, mood-driven discovery path.
+      </p>
+
+      <div class="grid-2" style="margin-bottom: 4mm;">
+        <div class="card card-highlight">
+          <div class="card-title">
+            <span>The Streaming Paralysis Problem</span>
+            <span class="badge badge-amber">Challenge</span>
+          </div>
+          <div class="card-body">
+            Users spend an average of 18 minutes browsing fragmented streaming apps without selecting a title. Standard algorithms recommend based on historical consumption rather than <em>current state of mind</em>, leading to abandoned viewing sessions.
+          </div>
+        </div>
+        <div class="card card-highlight">
+          <div class="card-title">
+            <span>The Cinevault Vibe Solution</span>
+            <span class="badge badge-emerald">Resolution</span>
+          </div>
+          <div class="card-body">
+            Cinevault introduces a 6-question progressive onboarding funnel ("The Vibe Flow") that captures emotional posture, available runtime, social context, and aesthetic preferences to generate a tightly tailored <strong>Tonight's Shortlist</strong> in seconds.
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-heading">The End-to-End User Experience</h2>
+      <div class="grid-3" style="margin-bottom: 3.5mm;">
+        <div class="card">
+          <div class="card-title">
+            <span>1. The Vibe Profiler</span>
+            <span class="badge badge-blue">Input</span>
+          </div>
+          <div class="card-body">
+            Visual poster tiles and interactive SVG clocks guide the user through format, mood, genres, runtime, audience, and era selections with intuitive single/multi-select rules.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span>2. Curated Shortlist</span>
+            <span class="badge badge-amber">Feed</span>
+          </div>
+          <div class="card-body">
+            Instant presentation of curated recommendations. Features rapid grid/list view toggles, category filtering (All, Movies, TV, Anime), and quick-action bookmarking.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span>3. Deep Inspection</span>
+            <span class="badge badge-purple">Detail</span>
+          </div>
+          <div class="card-body">
+            Full title page featuring high-res backdrops, trailer bottom-sheet modal, aggregated ratings (TMDb, IMDb, Rotten Tomatoes), cast details, user reviews, and direct provider links.
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Core Functional Pillars</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">Pillar</th>
+            <th style="width: 35%;">User-Facing Capability</th>
+            <th style="width: 45%;">Engineering Implementation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Tonight Feed</strong></td>
+            <td>Dynamic feed of titles tailored to active vibe filters. Dual grid & list layouts with infinite scroll pagination.</td>
+            <td>Dual-page concurrent fetch against TMDb discover endpoint with client-side deduplication and fallback caching.</td>
+          </tr>
+          <tr>
+            <td><strong>Watchlist (wl)</strong></td>
+            <td>One-tap bookmarking to save titles for future evenings. Badged count in bottom navigation.</td>
+            <td>Persisted in <code>localStorage['cinevault_wl']</code> as serialized ID arrays; synchronized with <code>mediaRegistry</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Watched Archive (wd)</strong></td>
+            <td>Marking completed titles with the eye icon; excludes seen titles and maintains consumption history.</td>
+            <td>Persisted in <code>localStorage['cinevault_wd']</code>. Automatically updated on title completion status change.</td>
+          </tr>
+          <tr>
+            <td><strong>Streaming Direct</strong></td>
+            <td>Direct search links to Netflix, Prime Video, Disney+, Max, Apple TV, Hulu, Crunchyroll, and Criterion.</td>
+            <td><code>getWatchProviderUrl()</code> encodes URL-safe deep search queries targeting provider web interfaces.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="doc-footer">
+      <span>Cinevault Platform Presentation</span>
+      <span>Executive Summary & User Journey</span>
+      <span>Page 2 of 7</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 3: TECHNICAL ARCHITECTURE & STACK ================= -->
+  <div class="page">
+    <div class="doc-header">
+      <div class="doc-logo">Cine<b>Vault</b></div>
+      <div class="doc-meta">Engineering Architecture & Tech Stack</div>
+    </div>
+
+    <div class="page-content">
+      <h1 class="page-title">Technical Architecture & Stack Specifications</h1>
+      <p class="page-subtitle">
+        Engineered with a high-performance modern web stack designed for zero bundle bloat, instant hot-reloading, strict type compliance, and seamless cross-platform responsive behavior.
+      </p>
+
+      <div class="arch-diagram">
+        <div class="arch-layer">
+          <div class="arch-layer-title">Presentation Layer (View & Interactions)</div>
+          <div class="arch-tags">
+            <span class="arch-tag">FeedPage (Grid/List)</span>
+            <span class="arch-tag">VibePage (6-Screen Funnel)</span>
+            <span class="arch-tag">DetailPage (Hero, Cast, Reviews)</span>
+            <span class="arch-tag">SheetModal (Trailer Player)</span>
+            <span class="arch-tag">Toast (Global Notifications)</span>
+            <span class="arch-tag">BottomNav (Persistent)</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-title">State & Lifecycle Layer (Context & Stores)</div>
+          <div class="arch-tags">
+            <span class="arch-tag">AppContext (Single Source of Truth)</span>
+            <span class="arch-tag">mediaRegistry (O(1) Map Cache)</span>
+            <span class="arch-tag">localStorage (Watchlist & Watched)</span>
+            <span class="arch-tag">HashRouter (Static Hosting Resilience)</span>
+            <span class="arch-tag">ScrollToTop (Route Lifecycle Sync)</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-title">Data Access & Integration Layer (Services & Engine)</div>
+          <div class="arch-tags">
+            <span class="arch-tag">buildDiscoverUrl (Parameter Synthesis)</span>
+            <span class="arch-tag">fetchDiscoverMovies (Concurrent Dispatch)</span>
+            <span class="arch-tag">fetchTMDbDetails (Just-In-Time Enrichment)</span>
+            <span class="arch-tag">getCuratedMedia (In-Memory Filter Engine)</span>
+            <span class="arch-tag">CURATED_MEDIA_CATALOG (Offline Fallback)</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-title">External Infrastructure & Downstream APIs</div>
+          <div class="arch-tags">
+            <span class="arch-tag">TMDb v3 REST API (/discover, /movie, /tv)</span>
+            <span class="arch-tag">YouTube IFrame API (Trailers)</span>
+            <span class="arch-tag">Streaming OTT Deep Links</span>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Detailed Technology Stack Matrix</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Technology</th>
+            <th>Version</th>
+            <th>Architectural Role & Value Proposition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>React</strong></td>
+            <td>19.2.7</td>
+            <td>Modern concurrent UI primitives, zero-overhead functional components, and unified context tree.</td>
+          </tr>
+          <tr>
+            <td><strong>TypeScript</strong></td>
+            <td>5.8.0</td>
+            <td>Strict type safety across API boundaries, data contracts (<code>CinevaultMedia</code>), and state schemas.</td>
+          </tr>
+          <tr>
+            <td><strong>Vite</strong></td>
+            <td>8.1.1</td>
+            <td>Lightning-fast ESM dev server, instantaneous HMR, optimized Rollup bundling, and tree-shaking.</td>
+          </tr>
+          <tr>
+            <td><strong>React Router</strong></td>
+            <td>7.18.5</td>
+            <td>Hash-based routing (<code>HashRouter</code>) ensuring zero routing 404s across GitHub Pages or static CDNs.</td>
+          </tr>
+          <tr>
+            <td><strong>Tailwind CSS</strong></td>
+            <td>3.4.17</td>
+            <td>Utility-first responsive design, custom glassmorphism, hardware-accelerated animations, and dark luxury tokens.</td>
+          </tr>
+          <tr>
+            <td><strong>Lucide React</strong></td>
+            <td>1.24.0</td>
+            <td>Lightweight, scalable vector iconography matching Apple & Netflix design guidelines.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="section-heading">Key Design Patterns Applied</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><span>Registry Pattern (Cache-First)</span></div>
+          <div class="card-body">
+            All fetched media items are normalized and indexed into an in-memory <code>Map&lt;number, CinevaultMedia&gt;</code>. Components access titles in O(1) without refetching from TMDb.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>Optimistic UI & JIT Enrichment</span></div>
+          <div class="card-body">
+            Cards render immediately with discovery metadata. Deep details (trailers, full credits, watch providers) are enriched asynchronously only when the user opens the detail page.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      <span>Cinevault Platform Presentation</span>
+      <span>Technical Architecture & Stack</span>
+      <span>Page 3 of 7</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 4: THE 6-STEP VIBE FUNNEL ================= -->
+  <div class="page">
+    <div class="doc-header">
+      <div class="doc-logo">Cine<b>Vault</b></div>
+      <div class="doc-meta">Algorithm & Discovery Engine</div>
+    </div>
+
+    <div class="page-content">
+      <h1 class="page-title">The 6-Step Vibe Profiling Engine</h1>
+      <p class="page-subtitle">
+        Rather than presenting complex search query forms, Cinevault structures user preference gathering through a curated 6-dimension funnel with clear constraints and real-time validation.
+      </p>
+
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-info">
+          <div class="flow-title">Format Selection (Target Media Paradigm)</div>
+          <div class="flow-desc">
+            Single-select choice: Feature Film (<code>movie</code>), Multi-Season TV (<code>tv</code>), Limited Series (<code>mini</code>), Anime & Animation (<code>anime</code>), or Real-World Documentary (<code>doc</code>). Switches the TMDb query target between <code>/discover/movie</code> and <code>/discover/tv</code>.
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-info">
+          <div class="flow-title">Emotional Mood (Affective State Mapping)</div>
+          <div class="flow-desc">
+            Pick up to 3 mood states: <em>Brain-off Popcorn</em> (comfort/comedy), <em>Edge of Your Seat</em> (suspense/thriller), <em>Mind-Bending</em> (sci-fi/cerebral), <em>Dark & Gritty</em> (noir/crime), <em>Tearjerker</em> (emotional drama), or <em>Big Screen Blast</em> (high-octane action).
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-info">
+          <div class="flow-title">Genre Refinement (Taxonomic Anchoring)</div>
+          <div class="flow-desc">
+            Multi-select pill tags spanning 18 standard cinematic categories (Action, Comedy, Drama, Sci-Fi, Horror, Romance, etc.). Injected into TMDb query as logical OR/AND combinations.
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-info">
+          <div class="flow-title">Available Runtime (Temporal Constraint)</div>
+          <div class="flow-desc">
+            Visualized with custom animated SVG clock dials: <em>Quick Bite</em> (&le;90 min), <em>Standard Feature</em> (90–125 min), <em>Epic Night</em> (&ge;145 min), or <em>No Preference</em>. Translates directly to <code>with_runtime.lte</code> and <code>with_runtime.gte</code> parameters.
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-info">
+          <div class="flow-title">Audience & Demographic (Maturity Gating)</div>
+          <div class="flow-desc">
+            Contextual viewing groups: <em>Kids</em> (strictly G & PG animation/family), <em>Family Night</em> (PG-13 blockbusters), <em>Date Night</em> (PG-13/R romance and thrillers), or <em>Solo Adults</em> (unrestricted R & NC-17). Translates to US MPAA certification filters.
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-num">6</div>
+        <div class="flow-info">
+          <div class="flow-title">Era & Language (Aesthetic & Cultural Dimension)</div>
+          <div class="flow-desc">
+            Era pills (2024–2026 New Releases, 2010s Hits, 2000s Nostalgia, 90s Classics, Golden Age) combined with language preferences (English/Hollywood, Korean Cinema, Japanese, International Subtitled).
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Validation & Funnel State Machine</h2>
+      <div class="grid-2" style="margin-top: 2mm;">
+        <div class="card">
+          <div class="card-title"><span>Progressive Step Validation</span></div>
+          <div class="card-body">
+            Each screen defines <code>min</code> and <code>max</code> selection boundaries. The "Continue" CTA remains disabled until <code>stepValid()</code> confirms constraints are satisfied, preventing invalid search executions.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>Summary & Curation Handoff</span></div>
+          <div class="card-body">
+            Upon completing Step 6, the user reaches the active vibe summary review displaying colored chips of all selected dimensions with options to "Open my feed" or "Reset feed".
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      <span>Cinevault Platform Presentation</span>
+      <span>The 6-Step Vibe Funnel</span>
+      <span>Page 4 of 7</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 5: DISCOVERY ENGINE & TMDB INTEGRATION ================= -->
+  <div class="page">
+    <div class="doc-header">
+      <div class="doc-logo">Cine<b>Vault</b></div>
+      <div class="doc-meta">Query Synthesis & Integration Engine</div>
+    </div>
+
+    <div class="page-content">
+      <h1 class="page-title">Query Synthesis & TMDb Integration Engine</h1>
+      <p class="page-subtitle">
+        Cinevault's proprietary query compiler translates subjective emotional states into high-precision TMDb v3 Discover API query strings while preserving high variety and preventing catalog dilution.
+      </p>
+
+      <h2 class="section-heading">Query Compilation Logic: buildDiscoverUrl()</h2>
+      <pre class="code-snippet">
+// Excerpt from Cinevault Query Engine (src/services/tmdb.ts)
+export function buildDiscoverUrl(apiKey: string, filters: OnboardingFilters, page: number = 1) {
+  let endpoint = filters.fmt?.has('tv') ? 'tv' : 'movie';
+  const url = new URL(`https://api.themoviedb.org/3/discover/${endpoint}`);
+
+  // Base Quality Guards
+  url.searchParams.set('include_adult', 'false');
+  url.searchParams.set('vote_count.gte', '20'); // Filter out low-sample noise
+  url.searchParams.set('sort_by', 'popularity.desc');
+
+  // Cross-Medium Taxonomy: TV vs Movie Genre Mapping
+  // TMDb defines distinct IDs for TV (e.g. Action&Adventure: 10759, Sci-Fi&Fantasy: 10765)
+  const gId = isTv ? (TV_GENRE_TO_TMDB_ID[genre] || GENRE_TO_TMDB_ID[genre]) : GENRE_TO_TMDB_ID[genre];
+
+  // Animation Anchoring: Prevents live-action from swamping anime/cartoon queries
+  if (wantsAnimation) {
+    url.searchParams.set('with_genres', `16,${otherGenres.join('|')}`);
+  }
+
+  // Runtime Translation
+  if (filters.time?.has('q')) url.searchParams.set('with_runtime.lte', '90');
+  if (filters.time?.has('e')) url.searchParams.set('with_runtime.gte', '145');
+
+  // Maturity / Certification
+  if (filters.age?.has('kids')) url.searchParams.set('certification', 'G|PG');
+  if (filters.age?.has('solo')) url.searchParams.set('certification', 'R|NC-17');
+
+  return { url: url.toString(), headers, endpoint };
+}
+      </pre>
+
+      <h2 class="section-heading">High-Density Concurrent Fetch Strategy</h2>
+      <div class="card" style="margin-bottom: 3.5mm;">
+        <div class="card-body">
+          Standard TMDb API responses return 20 items per page. To provide users with a rich, immersive browsing catalog immediately upon completing their vibe profile, Cinevault issues <strong>two concurrent page requests</strong> (Page 1 + Page 2) simultaneously during initial feed load:
+        </div>
+        <div style="display: flex; gap: 4mm; margin-top: 2.5mm;">
+          <div style="flex: 1; background: var(--card-inner); padding: 2mm 3mm; border-radius: 6px;">
+            <div style="color: var(--amber); font-weight: 600; font-size: 8pt; font-family: 'JetBrains Mono', monospace;">REQUEST 1 (Parallel)</div>
+            <div style="color: var(--text-muted); font-size: 7.5pt; margin-top: 1mm;"><code>GET /discover?page=1</code> &rarr; 20 titles</div>
+          </div>
+          <div style="flex: 1; background: var(--card-inner); padding: 2mm 3mm; border-radius: 6px;">
+            <div style="color: var(--amber); font-weight: 600; font-size: 8pt; font-family: 'JetBrains Mono', monospace;">REQUEST 2 (Parallel)</div>
+            <div style="color: var(--text-muted); font-size: 7.5pt; margin-top: 1mm;"><code>GET /discover?page=2</code> &rarr; 20 titles</div>
+          </div>
+          <div style="flex: 1; background: var(--card-inner); padding: 2mm 3mm; border-radius: 6px;">
+            <div style="color: var(--emerald); font-weight: 600; font-size: 8pt; font-family: 'JetBrains Mono', monospace;">DEDUPLICATION</div>
+            <div style="color: var(--text-muted); font-size: 7.5pt; margin-top: 1mm;"><code>seenIds.has(id)</code> + poster audit</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-heading">The Animation Anchoring Heuristic</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span>The Risk: Live-Action Dilution</span>
+            <span class="badge badge-rose">Problem</span>
+          </div>
+          <div class="card-body">
+            When users select multiple moods alongside Anime/Animation, naive query builders concatenate all genre IDs with pipe delimiters (OR). This allows massive live-action hits to drown out animated works.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span>The Fix: Mandatory Genre Anchor</span>
+            <span class="badge badge-emerald">Engine Solution</span>
+          </div>
+          <div class="card-body">
+            Cinevault isolates Genre ID <code>16</code> (Animation) as mandatory: <code>with_genres=16,28|12</code>. This guarantees that every returned result is animated while still satisfying mood criteria.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      <span>Cinevault Platform Presentation</span>
+      <span>Discovery Engine & TMDb Integration</span>
+      <span>Page 5 of 7</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 6: STATE MANAGEMENT & DATA LIFECYCLE ================= -->
+  <div class="page">
+    <div class="doc-header">
+      <div class="doc-logo">Cine<b>Vault</b></div>
+      <div class="doc-meta">State Architecture & Persistence</div>
+    </div>
+
+    <div class="page-content">
+      <h1 class="page-title">State Architecture, Persistence & Lifecycle</h1>
+      <p class="page-subtitle">
+        Cinevault implements a centralized reactive state container via React Context API, segregating long-term persistent user records from high-frequency in-memory discovery feeds.
+      </p>
+
+      <div class="grid-2" style="margin-bottom: 4mm;">
+        <div class="card">
+          <div class="card-title">
+            <span>Persistent Tier (localStorage)</span>
+            <span class="badge badge-emerald">Storage Backed</span>
+          </div>
+          <div class="card-body">
+            User collections that must survive browser reboots and sessions:
+            <ul style="margin-left: 4mm; margin-top: 1.5mm;">
+              <li><code>cinevault_wl</code>: Set of bookmarked title IDs.</li>
+              <li><code>cinevault_wd</code>: Set of watched title IDs.</li>
+              <li><code>cinevault_tmdb_key</code>: Optional custom API key.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span>Transient Tier (React Context State)</span>
+            <span class="badge badge-blue">Memory Only</span>
+          </div>
+          <div class="card-body">
+            Session-scoped reactive state managed inside <code>AppContext</code>:
+            <ul style="margin-left: 4mm; margin-top: 1.5mm;">
+              <li><code>feedItems</code>: Active curated media list.</li>
+              <li><code>sel</code>: Active vibe filter selections.</li>
+              <li><code>cur</code>: Active onboarding step pointer.</li>
+              <li><code>feedView</code>: Grid vs List view toggle.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Detailed State Lifecycle & Feed Persistence Analysis</h2>
+      <div class="card card-highlight" style="margin-bottom: 3.5mm;">
+        <div class="card-title">
+          <span>What Happens When a User Clicks Around & Returns?</span>
+          <span class="badge badge-amber">Lifecycle Insight</span>
+        </div>
+        <div class="card-body" style="font-size: 8.5pt;">
+          <strong>Navigation Inside the App:</strong> Because <code>AppProvider</code> sits at the root of the React tree outside <code>HashRouter</code>, navigating from <code>/tonight</code> to <code>/title/:id</code> and pressing Back <em>does not unmount AppContext</em>. The feed and selections stay intact in memory.<br><br>
+          <strong>Why the Feed May Reset to Default Catalog:</strong>
+          <ol style="margin-left: 4mm; margin-top: 1mm;">
+            <li><strong>Hard Page Refresh (F5 / Reload):</strong> Because <code>sel</code> and <code>feedItems</code> are stored in React memory and not in <code>localStorage</code>, a hard reload resets <code>sel</code> to empty sets and re-initializes <code>feedItems</code> with the fallback catalog <code>CURATED_MEDIA_CATALOG</code>.</li>
+            <li><strong>Category / Sort Filter Triggers:</strong> Changing category tabs triggers <code>loadFeed()</code>. If vibe selections had not completed or an API error occurred, it gracefully falls back to the curated catalog.</li>
+          </ol>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Just-In-Time Media Enrichment Pipeline</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Stage</th>
+            <th>Trigger Event</th>
+            <th>Data Fetched / Mutated</th>
+            <th>Performance Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Discovery Fetch</strong></td>
+            <td>Vibe funnel completion or tab change</td>
+            <td>Titles, posters, year, basic ratings, genre IDs.</td>
+            <td>Ultra-light payload (~15KB per 20 titles). Fast time-to-first-render.</td>
+          </tr>
+          <tr>
+            <td><strong>Detail Navigation</strong></td>
+            <td>User clicks movie card (<code>/title/:id</code>)</td>
+            <td>YouTube trailer key, runtime, US streaming providers, top cast with profile photos, director, studios.</td>
+            <td>Deferred network call. Zero wasted bandwidth on titles never clicked.</td>
+          </tr>
+          <tr>
+            <td><strong>Registry Merge</strong></td>
+            <td>TMDb details return</td>
+            <td>Enriched object written into <code>mediaRegistry</code>.</td>
+            <td>Subsequent navigations to this title are instantaneous from cache.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="doc-footer">
+      <span>Cinevault Platform Presentation</span>
+      <span>State Architecture & Persistence</span>
+      <span>Page 6 of 7</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 7: RESILIENCY & STRATEGIC ROADMAP ================= -->
+  <div class="page">
+    <div class="doc-header">
+      <div class="doc-logo">Cine<b>Vault</b></div>
+      <div class="doc-meta">Reliability & Engineering Roadmap</div>
+    </div>
+
+    <div class="page-content">
+      <h1 class="page-title">Fault-Tolerance & Engineering Roadmap</h1>
+      <p class="page-subtitle">
+        Architected with dual-layer offline resiliency to guarantee zero user interruption, coupled with a forward-looking roadmap for AI embeddings and cross-device synchronization.
+      </p>
+
+      <h2 class="section-heading">The Dual-Mode Resiliency Architecture</h2>
+      <div class="grid-2" style="margin-bottom: 4mm;">
+        <div class="card">
+          <div class="card-title">
+            <span>Live TMDb v3 Integration Mode</span>
+            <span class="badge badge-emerald">Online</span>
+          </div>
+          <div class="card-body">
+            Full dynamic access to 800,000+ films and television series with live streaming provider availability, fresh trailers, and real-time community ratings.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span>Curated Offline Fallback Engine</span>
+            <span class="badge badge-amber">Fail-Safe</span>
+          </div>
+          <div class="card-body">
+            When offline, or if TMDb hits rate limits, <code>getCuratedMedia()</code> executes client-side filtering over <code>CURATED_MEDIA_CATALOG</code>, ensuring an uninterrupted demo experience.
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Strategic Engineering Roadmap</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Milestone</th>
+            <th style="width: 35%;">Technical Objective</th>
+            <th style="width: 40%;">Expected Business & UX Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Phase 1: Persistence Layer</strong></td>
+            <td>Sync <code>sel</code> (vibe filters) and <code>feedItems</code> to <code>localStorage</code> / <code>IndexedDB</code>.</td>
+            <td>Eliminates feed resets on hard page reloads; seamless session restoration.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 2: Semantic AI Vibes</strong></td>
+            <td>Integrate Gemini API vector embeddings for natural language vibe queries ("cinematic rainy mystery like Zodiac").</td>
+            <td>Enables conversational and nuanced search beyond rigid category checkboxes.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 3: Virtualized List</strong></td>
+            <td>Implement <code>react-window</code> for feed card recycling.</td>
+            <td>Guarantees 60fps scrolling performance even when users load 500+ titles.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 4: Social Watch Parties</strong></td>
+            <td>WebRTC / WebSocket room sync to intersect two users' vibe profiles into a joint shortlist.</td>
+            <td>Solves the "couples / roommates what-to-watch debate" with mathematical consensus.</td>
+          </tr>
+          <tr>
+            <td><strong>Phase 5: Global Localization</strong></td>
+            <td>Auto-detect client IP to query country-specific streaming providers (UK, EU, APAC).</td>
+            <td>Accurate regional streaming availability worldwide.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="section-heading">Conclusion & Presentation Summary</h2>
+      <div class="card card-highlight">
+        <div class="card-body" style="font-size: 9pt; line-height: 1.45;">
+          <strong>Cinevault is not just another movie database:</strong> it is a purpose-built discovery instrument that bridges human psychology with programmatic data queries. By combining reactive TypeScript architecture, multi-factor affective filtering, resilient caching, and a fail-safe fallback catalog, Cinevault delivers an unmatched entertainment discovery experience.
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      <span>Cinevault Platform Presentation</span>
+      <span>Reliability & Roadmap · End of Document</span>
+      <span>Page 7 of 7</span>
+    </div>
+  </div>
+
+</body>
+</html>

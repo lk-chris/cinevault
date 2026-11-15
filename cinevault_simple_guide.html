@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cinevault - Simple Team Guide & Presentation Walkthrough</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm 12mm 14mm;
+    }
+
+    body {
+      background-color: #FFFFFF;
+      color: #1E293B;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 10pt;
+      line-height: 1.5;
+    }
+
+    .page {
+      page-break-after: always;
+      page-break-inside: avoid;
+      position: relative;
+      height: 272mm;
+      max-height: 272mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      overflow: hidden;
+      padding-bottom: 2mm;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Top Banner */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #E2E8F0;
+      padding-bottom: 2.5mm;
+      margin-bottom: 3.5mm;
+    }
+
+    .brand {
+      font-size: 14pt;
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: -0.5px;
+    }
+
+    .brand span {
+      color: #D97706;
+    }
+
+    .doc-badge {
+      background: #FEF3C7;
+      color: #92400E;
+      font-size: 8pt;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .footer {
+      border-top: 1px solid #E2E8F0;
+      padding-top: 2.5mm;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8pt;
+      color: #64748B;
+      font-weight: 500;
+    }
+
+    .content {
+      flex: 1;
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 18pt;
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      margin-bottom: 1.5mm;
+    }
+
+    p.lead {
+      font-size: 10.5pt;
+      color: #475569;
+      margin-bottom: 3.5mm;
+      line-height: 1.45;
+    }
+
+    h2 {
+      font-size: 11.5pt;
+      font-weight: 800;
+      color: #0F172A;
+      margin-top: 3.5mm;
+      margin-bottom: 2mm;
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+    }
+
+    h2 .num {
+      background: #D97706;
+      color: #FFFFFF;
+      font-size: 8.5pt;
+      font-weight: 800;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Cards */
+    .card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 3mm 4mm;
+      margin-bottom: 2.5mm;
+    }
+
+    .card-highlight {
+      background: #FFFBEB;
+      border: 1.5px solid #FDE68A;
+    }
+
+    .card-title {
+      font-weight: 700;
+      font-size: 9.5pt;
+      color: #0F172A;
+      margin-bottom: 1mm;
+    }
+
+    .card-text {
+      font-size: 9pt;
+      color: #334155;
+      line-height: 1.45;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3mm;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2.5mm;
+    }
+
+    /* Steps */
+    .step-box {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      padding: 2.5mm 3mm;
+    }
+
+    .step-header {
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: #D97706;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 1mm;
+    }
+
+    .step-name {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 0.5mm;
+    }
+
+    .step-desc {
+      font-size: 8.5pt;
+      color: #475569;
+      line-height: 1.35;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2mm 0 3mm 0;
+      font-size: 8.8pt;
+    }
+
+    th {
+      background: #F1F5F9;
+      color: #0F172A;
+      font-weight: 700;
+      text-align: left;
+      padding: 2mm 3mm;
+      border: 1px solid #CBD5E1;
+      font-size: 8pt;
+    }
+
+    td {
+      padding: 2.2mm 3mm;
+      border: 1px solid #E2E8F0;
+      color: #334155;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td {
+      background: #F8FAFC;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8pt;
+      background: #F1F5F9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #0F172A;
+      font-weight: 600;
+    }
+
+    ul {
+      margin-left: 4.5mm;
+      margin-top: 1mm;
+    }
+
+    li {
+      margin-bottom: 1mm;
+      font-size: 8.8pt;
+      color: #334155;
+    }
+
+    li strong {
+      color: #0F172A;
+    }
+
+    /* Callout box */
+    .callout {
+      border-left: 4px solid #D97706;
+      background: #FFFBEB;
+      padding: 2.5mm 3.5mm;
+      border-radius: 0 6px 6px 0;
+      margin-top: 2.5mm;
+      margin-bottom: 2.5mm;
+    }
+
+    .callout-title {
+      font-weight: 800;
+      font-size: 9pt;
+      color: #92400E;
+      margin-bottom: 0.5mm;
+    }
+
+    .callout-body {
+      font-size: 8.5pt;
+      color: #78350F;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= PAGE 1 ================= -->
+  <div class="page">
+    <div class="top-bar">
+      <div class="brand">Cine<span>Vault</span></div>
+      <div class="doc-badge">Plain-English Team Guide</div>
+    </div>
+
+    <div class="content">
+      <h1>What is Cinevault & How Does It Work?</h1>
+      <p class="lead">
+        A simple, non-technical guide explaining what Cinevault is, why we made it, what each part of the app does, and how to talk about it during tomorrow's presentation.
+      </p>
+
+      <h2><span class="num">1</span> What is Cinevault in One Sentence?</h2>
+      <div class="card card-highlight">
+        <div class="card-title">The 30-Second Movie Matchmaker</div>
+        <div class="card-text">
+          Cinevault is a web app that stops you from wasting 45 minutes scrolling through Netflix, Disney+, and Prime trying to agree on what to watch. Instead of dumping thousands of titles on you, it asks 6 quick questions about your <strong>current vibe and time limit</strong>, and instantly hands you a tailored shortlist.
+        </div>
+      </div>
+
+      <h2><span class="num">2</span> The Real-Life Problem We Are Solving</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">The Netflix Scrolling Nightmare</div>
+          <div class="card-text">
+            You sit down with friends or family. You open a streaming app. Everyone scrolls through endless rows. Someone says <em>"seen it"</em>, someone else says <em>"not in the mood for that"</em>. By the time you agree on something, your food is cold or it's time for bed.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Why Current Apps Suck at This</div>
+          <div class="card-text">
+            Netflix and Prime recommend things based on what you watched <strong>three months ago</strong>. But tonight you might be tired, or on a date, or only have 90 minutes. They don't know your <em>current situation</em>. Cinevault does.
+          </div>
+        </div>
+      </div>
+
+      <h2><span class="num">3</span> The 6-Question "Vibe Quiz"</h2>
+      <p style="font-size: 8.8pt; color: #64748B; margin-bottom: 2mm;">
+        When a user opens Cinevault, they tap through a quick 6-step quiz. Here is what each step asks:
+      </p>
+
+      <div class="grid-3" style="margin-bottom: 2mm;">
+        <div class="step-box">
+          <div class="step-header">Step 1</div>
+          <div class="step-name">Format</div>
+          <div class="step-desc">Do you want a full Movie, a multi-season TV Show, a short Miniseries, Anime, or a Documentary?</div>
+        </div>
+        <div class="step-box">
+          <div class="step-header">Step 2</div>
+          <div class="step-name">Your Mood</div>
+          <div class="step-desc">Brain-off comfort comedy? Edge-of-seat suspense? Mind-bending sci-fi? Or a dark gritty crime story?</div>
+        </div>
+        <div class="step-box">
+          <div class="step-header">Step 3</div>
+          <div class="step-name">Genre Pills</div>
+          <div class="step-desc">Pick what types of stories you like tonight (Action, Comedy, Horror, Romance, Sci-Fi, etc.).</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="step-box">
+          <div class="step-header">Step 4</div>
+          <div class="step-name">Available Time</div>
+          <div class="step-desc">Quick 90-minute watch, standard 2-hour movie, or an epic 3-hour marathon? (Features cute clock dials).</div>
+        </div>
+        <div class="step-box">
+          <div class="step-header">Step 5</div>
+          <div class="step-name">Who's Watching?</div>
+          <div class="step-desc">Kids in the room (G/PG only)? Family night (PG-13)? Date night? Or just you (unrestricted R/mature)?</div>
+        </div>
+        <div class="step-box">
+          <div class="step-header">Step 6</div>
+          <div class="step-name">Era & Language</div>
+          <div class="step-desc">New releases (2024–2026), 90s/2000s classics, or international cinema (Korean, Japanese, etc.)?</div>
+        </div>
+      </div>
+
+      <h2><span class="num">4</span> The Result: "Tonight's Feed"</h2>
+      <div class="card">
+        <div class="card-text">
+          As soon as you tap <strong>"Open my feed"</strong>, Cinevault compiles your answers, searches a massive movie database, and displays ~40 matching titles. You can toggle between <strong>Poster Grid View</strong> (looks like Netflix) or <strong>List View</strong> (shows plot summaries, runtimes, and ratings side-by-side).
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Cinevault Team Presentation Guide</span>
+      <span>What It Is & How It Works · Page 1 of 3</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 2 ================= -->
+  <div class="page">
+    <div class="top-bar">
+      <div class="brand">Cine<span>Vault</span></div>
+      <div class="doc-badge">App Features & How It Works Under The Hood</div>
+    </div>
+
+    <div class="content">
+      <h2><span class="num">5</span> What Users Can Do Inside the App</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 25%;">Feature</th>
+            <th style="width: 35%;">What it looks like to the user</th>
+            <th style="width: 40%;">Why it's cool / useful</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Movie Detail Page</strong></td>
+            <td>Tap any poster to see high-res movie backdrops, official plot synopsis, director, and actors with profile photos.</td>
+            <td>Gives you the full picture in 5 seconds so you know if you actually want to watch it.</td>
+          </tr>
+          <tr>
+            <td><strong>Watch the Trailer</strong></td>
+            <td>Tap the "Play Trailer" button to watch the official YouTube trailer inside a clean popup modal.</td>
+            <td>You don't have to leave Cinevault or open YouTube in another tab.</td>
+          </tr>
+          <tr>
+            <td><strong>Where to Stream</strong></td>
+            <td>Buttons that link directly to Netflix, Amazon Prime, Disney+, Max, Apple TV, Hulu, etc.</td>
+            <td>Solves the <em>"Okay, but where can I actually watch this?"</em> question with 1 click.</td>
+          </tr>
+          <tr>
+            <td><strong>Watchlist (Bookmark)</strong></td>
+            <td>Tap the bookmark icon on any card to save it into your Watchlist tab.</td>
+            <td>Lets you save good movies for tomorrow or the weekend so you don't forget them.</td>
+          </tr>
+          <tr>
+            <td><strong>Watched (Eye icon)</strong></td>
+            <td>Tap the eye icon on any movie you've already seen to mark it as finished.</td>
+            <td>Keeps a diary of movies you've watched and keeps your feed fresh.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2><span class="num">6</span> How It Works Under The Hood (In Plain English)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">1. Where the movies come from (TMDb)</div>
+          <div class="card-text">
+            We don't type movie info by hand. We connect to <strong>The Movie Database (TMDb)</strong>. It's like a giant free Wikipedia for movies that has posters, trailers, ratings, and actors for over 800,000 films and shows.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">2. How the quiz talks to the database</div>
+          <div class="card-text">
+            When you pick "Kids + Comedy + Under 90 minutes", our code takes those buttons and translates them into a search request that asks TMDb: <em>"Give us the most popular animated movies rated PG that are under 90 minutes."</em>
+          </div>
+        </div>
+      </div>
+
+      <h2><span class="num">7</span> The TV Show Bug We Just Solved (Tell this story!)</h2>
+      <div class="callout">
+        <div class="callout-title">A great story for your presentation: "Here is a bug we found and fixed"</div>
+        <div class="callout-body">
+          <strong>The Weird Problem:</strong> Earlier, if you picked <em>"TV Show + Action + Kids"</em>, the app returned 0 results. But if you switched to <em>"Movie"</em>, it showed 180+ results.<br>
+          <strong>Why it happened:</strong> In the TMDb database, Movies and TV shows use totally different category ID numbers. For movies, the Action category is number <code>28</code>. But for TV shows, number 28 doesn't exist — TV calls it "Action & Adventure" and numbers it <code>10759</code>. Our app was sending the movie number to the TV database, so the database got confused and returned nothing!<br>
+          <strong>How we fixed it:</strong> We created a smart translator (<code>TV_GENRE_TO_TMDB_ID</code>) that checks: if the user wants TV, it automatically sends the right TV number (10759). Now it returns <strong>over 1,400 TV shows</strong>!
+        </div>
+      </div>
+
+      <h2><span class="num">8</span> What Happens to Your Feed When You Click Around?</h2>
+      <div class="card">
+        <div class="card-text">
+          <ul>
+            <li><strong>Clicking around the app:</strong> If you tap a movie, watch the trailer, and click Back to the feed, <strong>everything stays right where you left it</strong>.</li>
+            <li><strong>Hard Refreshing (F5) or closing the tab:</strong> The vibe quiz is stored in your browser's temporary memory. If you refresh the page completely, the quiz resets back to step 1 and the feed shows the default popular movies.</li>
+            <li><strong>What is permanently saved:</strong> Your <strong>Watchlist</strong> and <strong>Watched</strong> lists are saved on your phone/computer in <code>localStorage</code>, so they <em>never</em> disappear even if you turn off your laptop!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Cinevault Team Presentation Guide</span>
+      <span>Under the Hood & Bug Fix · Page 2 of 3</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 3 ================= -->
+  <div class="page">
+    <div class="top-bar">
+      <div class="brand">Cine<span>Vault</span></div>
+      <div class="doc-badge">Tech Stack & Connecting AI</div>
+    </div>
+
+    <div class="content">
+      <h2><span class="num">9</span> What Tools Built Cinevault? (Simple Tech Stack)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 25%;">Tool</th>
+            <th style="width: 35%;">What it is in normal words</th>
+            <th style="width: 40%;">Why we used it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>React 19 & TypeScript</strong></td>
+            <td>The building blocks and programming language.</td>
+            <td>Makes the website super snappy like an app. You never wait for pages to reload when clicking tabs.</td>
+          </tr>
+          <tr>
+            <td><strong>Vite</strong></td>
+            <td>The engine that packages the code.</td>
+            <td>Makes the app load in milliseconds on any phone, tablet, or laptop.</td>
+          </tr>
+          <tr>
+            <td><strong>Tailwind CSS</strong></td>
+            <td>The design and styling system.</td>
+            <td>Gives Cinevault its dark cinema look (dark gray background, gold buttons, blurred glass menus).</td>
+          </tr>
+          <tr>
+            <td><strong>TMDb API</strong></td>
+            <td>The cloud database connection.</td>
+            <td>Gives us real movie posters, release dates, actor lists, and trailer video links for free.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2><span class="num">10</span> What If The Internet Drops? (Offline Backup Mode)</h2>
+      <div class="card">
+        <div class="card-text">
+          If you're presenting somewhere with terrible Wi-Fi, or if TMDb goes down, Cinevault has an automated <strong>Curated Backup Catalog</strong> stored right inside the app. It will seamlessly show high-quality verified titles (like <em>Top Gun: Maverick</em>, <em>Avatar</em>, <em>Spirited Away</em>) with zero error messages.
+        </div>
+      </div>
+
+      <h2><span class="num">11</span> How Do We Connect AI to Cinevault?</h2>
+      <div class="card card-highlight">
+        <div class="card-title">From 6 Checkbox Steps &rarr; Natural Language "Vibe Prompts"</div>
+        <div class="card-text">
+          Right now, Cinevault uses 6 structured quiz buttons. Connecting AI takes this to the next level: users can just type or speak naturally, like:
+          <br>
+          <em style="color: #B45309; font-weight: 600;">"I want a cozy rainy-night mystery like Knives Out with a clever twist, under 2 hours."</em>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 2.5mm;">
+        <div class="card">
+          <div class="card-title">1. Natural Language &rarr; Structured Filter</div>
+          <div class="card-text">
+            <strong>How it works:</strong> The user's prompt is sent to an AI model (like Google Gemini). Using Function Calling / JSON mode, the AI extracts the exact filter criteria:
+            <code>{ type: 'movie', genres: ['Mystery', 'Comedy'], runtime: '&lt;=120', era: 'recent' }</code>
+            and hands it straight to our existing feed engine.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">2. Semantic Vector Search (Thematic Matches)</div>
+          <div class="card-text">
+            <strong>Beyond generic tags:</strong> Standard genre tags can't capture "rainy aesthetic" or "comfort food cinema". We convert movie plots into mathematical <em>embeddings</em>. The AI matches the emotional vibe of your prompt directly against 800,000 film synopses.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 2.5mm;">
+        <div class="card">
+          <div class="card-title">3. AI "Why You'll Like This" Badges</div>
+          <div class="card-text">
+            Instead of just showing a generic star rating, the AI generates a customized 1-sentence note on each card:
+            <br>
+            <em style="color: #475569;">"Matches your vibe because it's fast-paced, has zero gory scenes, and wraps up in 88 minutes."</em>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">4. Two-Person Group Vibe Matcher</div>
+          <div class="card-text">
+            Both you and a friend enter what you're each in the mood for. The AI compares both inputs and finds the sweet spot: the movie that satisfies both tastes with zero arguing.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Cinevault Team Presentation Guide</span>
+      <span>Tech Stack & Connecting AI · Page 3 of 3</span>
+    </div>
+  </div>
+
+</body>
+</html>

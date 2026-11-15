@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cinevault - Technical Brief & Presentation Guide</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 14mm 16mm 14mm 16mm;
+    }
+
+    body {
+      background-color: #FFFFFF;
+      color: #111827;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 9.5pt;
+      line-height: 1.45;
+    }
+
+    .page {
+      page-break-after: always;
+      page-break-inside: avoid;
+      position: relative;
+      height: 268mm;
+      max-height: 268mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Minimalist Header & Footer */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 2px solid #111827;
+      padding-bottom: 3mm;
+      margin-bottom: 4mm;
+    }
+
+    .header-title {
+      font-size: 14pt;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: #111827;
+    }
+
+    .header-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8pt;
+      font-weight: 600;
+      color: #4B5563;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #E5E7EB;
+      padding-top: 2.5mm;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5pt;
+      color: #6B7280;
+    }
+
+    .content {
+      flex: 1;
+    }
+
+    /* Headings */
+    h1 {
+      font-size: 16pt;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.4px;
+      margin-bottom: 1.5mm;
+    }
+
+    p.subtitle {
+      font-size: 9.5pt;
+      color: #4B5563;
+      margin-bottom: 4mm;
+      line-height: 1.4;
+    }
+
+    h2 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #111827;
+      border-left: 3px solid #D97706;
+      padding-left: 2.5mm;
+      margin-top: 3.5mm;
+      margin-bottom: 2mm;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Clean Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2mm 0 3mm 0;
+      font-size: 8.5pt;
+    }
+
+    th {
+      background-color: #F3F4F6;
+      color: #111827;
+      font-weight: 600;
+      text-align: left;
+      padding: 2mm 2.5mm;
+      border: 1px solid #E5E7EB;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5pt;
+    }
+
+    td {
+      padding: 2mm 2.5mm;
+      border: 1px solid #E5E7EB;
+      color: #374151;
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #F9FAFB;
+    }
+
+    /* Clean boxes */
+    .box {
+      border: 1px solid #E5E7EB;
+      border-radius: 4px;
+      padding: 3mm 3.5mm;
+      margin-bottom: 3mm;
+      background: #FAFAFA;
+    }
+
+    .box-amber {
+      border-left: 3px solid #D97706;
+      background: #FFFBEB;
+    }
+
+    .box-title {
+      font-weight: 700;
+      font-size: 9pt;
+      color: #111827;
+      margin-bottom: 1mm;
+    }
+
+    .box-body {
+      font-size: 8.5pt;
+      color: #374151;
+      line-height: 1.4;
+    }
+
+    /* Lists */
+    ul, ol {
+      margin-left: 5mm;
+      margin-bottom: 2.5mm;
+    }
+
+    li {
+      margin-bottom: 1mm;
+      font-size: 8.5pt;
+      color: #374151;
+    }
+
+    li strong {
+      color: #111827;
+    }
+
+    /* Inline tags and code */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5pt;
+      background: #F3F4F6;
+      padding: 1px 3.5px;
+      border-radius: 3px;
+      color: #1F2937;
+      border: 1px solid #E5E7EB;
+    }
+
+    .tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7pt;
+      font-weight: 600;
+      padding: 1px 4px;
+      border-radius: 3px;
+      background: #F3F4F6;
+      border: 1px solid #D1D5DB;
+      color: #374151;
+      margin-right: 1.5mm;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5mm;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= PAGE 1 ================= -->
+  <div class="page">
+    <div class="header">
+      <div class="header-title">Cinevault Technical Dossier</div>
+      <div class="header-tag">Executive Summary & Platform Mechanics</div>
+    </div>
+
+    <div class="content">
+      <h1>Cinevault: System Overview & Architecture</h1>
+      <p class="subtitle">
+        A concise, direct technical reference for presentation delivery. Explains platform purpose, user workflow, technical stack, and data flow without unnecessary embellishment.
+      </p>
+
+      <h2>1. The Problem & Core Solution</h2>
+      <div class="box">
+        <div class="box-title">Streaming Paralysis vs. Vibe-Based Curation</div>
+        <div class="box-body">
+          Standard streaming platforms index 50,000+ titles but cause choice fatigue because users browse based on past watch history rather than their <strong>current mood, time constraint, and social context</strong>. Cinevault solves this by replacing infinite catalog scrolling with a 6-step progressive filter ("The Vibe Flow") that produces an immediate, high-signal shortlist ("Tonight's Feed").
+        </div>
+      </div>
+
+      <h2>2. End-to-End User Flow (4 Key Stages)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 22%;">Stage</th>
+            <th style="width: 40%;">User Action</th>
+            <th style="width: 38%;">System Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Vibe Profiler</strong></td>
+            <td>User answers 6 quick preference questions (Format, Mood, Genre, Time, Audience, Era).</td>
+            <td>Validates minimum/maximum rules in memory; aggregates selections into an active filter object.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Tonight Feed</strong></td>
+            <td>User reviews the resulting shortlist in Grid (2:3 portrait cards) or List (editorial synopsis) view.</td>
+            <td>Issues concurrent dual-page API query (40 titles); renders cached results; supports infinite scroll.</td>
+          </tr>
+          <tr>
+            <td><strong>3. Deep Inspection</strong></td>
+            <td>User taps any title to view details, ratings, cast, and embedded YouTube trailer.</td>
+            <td>Triggers just-in-time API enrichment for cast, director, and US streaming availability; caches in memory.</td>
+          </tr>
+          <tr>
+            <td><strong>4. Collection Sync</strong></td>
+            <td>User taps Bookmark (Watchlist) or Eye (Watched) quick-action buttons.</td>
+            <td>Immediately updates local sets and writes serialized IDs to browser <code>localStorage</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>3. The 6 Vibe Funnel Dimensions</h2>
+      <div class="grid-2">
+        <div class="box">
+          <div class="box-title">Dimensions 1 – 3: Medium & Mood</div>
+          <ul>
+            <li><strong>1. Format:</strong> Single-choice: Feature Film (<code>movie</code>), TV Show (<code>tv</code>), Limited Series (<code>mini</code>), Anime (<code>anime</code>), or Documentary (<code>doc</code>).</li>
+            <li><strong>2. Mood:</strong> Multi-choice (up to 3): Brain-off (comfort), Edge of Seat (suspense), Mind-bending (cerebral), Dark & Gritty, Tearjerker, Big Screen Blast.</li>
+            <li><strong>3. Genre:</strong> 18 standard cinema pills (Action, Comedy, Drama, Sci-Fi, Horror, Romance, etc.).</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="box-title">Dimensions 4 – 6: Constraints & Context</div>
+          <ul>
+            <li><strong>4. Runtime:</strong> Quick (&le;90m), Standard (90–125m), Epic (&ge;145m), or Any.</li>
+            <li><strong>5. Audience:</strong> Kids (G/PG), Family (PG-13), Date Night, Solo Adults (R/NC-17).</li>
+            <li><strong>6. Era & Language:</strong> Releases (2024–2026, 2010s, 2000s, 90s, Classics) + Language (English, Korean, Japanese, International).</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>4. Technology Stack Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Technology</th>
+            <th>Version</th>
+            <th>Role in Cinevault</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>React</strong></td>
+            <td>19.2.7</td>
+            <td>Core UI framework utilizing modern concurrent rendering and unified Context tree.</td>
+          </tr>
+          <tr>
+            <td><strong>TypeScript</strong></td>
+            <td>5.8.0</td>
+            <td>Strict typing across data models (<code>CinevaultMedia</code>), state schemas, and API responses.</td>
+          </tr>
+          <tr>
+            <td><strong>Vite</strong></td>
+            <td>8.1.1</td>
+            <td>Fast dev tooling, sub-second HMR, Rollup production bundling, and tree-shaking.</td>
+          </tr>
+          <tr>
+            <td><strong>React Router</strong></td>
+            <td>7.18.5</td>
+            <td>Client-side <code>HashRouter</code> ensuring static hosting compatibility with zero server routing 404s.</td>
+          </tr>
+          <tr>
+            <td><strong>Tailwind CSS</strong></td>
+            <td>3.4.17</td>
+            <td>Utility styling with dark mode theme (<code>#0A0A0C</code>), glassmorphic backdrops, and amber accent.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      <span>Cinevault Presentation Technical Brief</span>
+      <span>Confidential · Page 1 of 3</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 2 ================= -->
+  <div class="page">
+    <div class="header">
+      <div class="header-title">Cinevault Technical Dossier</div>
+      <div class="header-tag">Architecture, APIs & Data Lifecycle</div>
+    </div>
+
+    <div class="content">
+      <h2>5. Architecture & State Management</h2>
+      <div class="box">
+        <div class="box-title">Single Source of Truth: AppContext</div>
+        <div class="box-body">
+          State is centralized at the root inside <code>AppContext.tsx</code> wrapping the entire application. It maintains two distinct storage tiers:
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="box">
+          <div class="box-title">Tier A: Persistent (localStorage)</div>
+          <p style="font-size: 8pt; color: #4B5563; margin-bottom: 1.5mm;">Survives page reloads and browser sessions:</p>
+          <ul>
+            <li><code>cinevault_wl</code>: Array of IDs saved to Watchlist.</li>
+            <li><code>cinevault_wd</code>: Array of IDs marked Watched.</li>
+            <li><code>cinevault_tmdb_key</code>: User custom TMDb API key.</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="box-title">Tier B: Transient (React useState)</div>
+          <p style="font-size: 8pt; color: #4B5563; margin-bottom: 1.5mm;">Active session memory (resets on full reload):</p>
+          <ul>
+            <li><code>feedItems</code>: Active media list loaded in feed.</li>
+            <li><code>sel</code>: Active vibe filter selections.</li>
+            <li><code>cur</code>: Step index in the 6-step vibe flow.</li>
+            <li><code>mediaRegistry</code>: In-memory <code>Map&lt;id, CinevaultMedia&gt;</code> cache.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>6. State Lifecycle: What Happens When Clicking Around?</h2>
+      <div class="box box-amber">
+        <div class="box-title">Addressing the "Feed Disappearing" Question</div>
+        <div class="box-body">
+          <strong>Internal App Navigation (Seamless):</strong> When a user clicks a movie from the feed to view <code>/title/:id</code> and returns via the back button, the feed <strong>does not disappear</strong> because <code>AppContext</code> stays mounted at the root.<br><br>
+          <strong>Hard Browser Refresh (State Reset):</strong> If the user hits browser reload (F5) or opens the link in a new tab, React in-memory state re-initializes. Because <code>sel</code> and <code>feedItems</code> are not yet serialized to <code>localStorage</code>, <code>sel</code> resets to empty and the feed defaults back to the built-in catalog (<code>CURATED_MEDIA_CATALOG</code>).<br><br>
+          <strong>Roadmap Solution:</strong> Phase 1 of the engineering roadmap syncs <code>sel</code> and <code>feedItems</code> to <code>localStorage</code> / <code>IndexedDB</code> to preserve state across hard reloads.
+        </div>
+      </div>
+
+      <h2>7. TMDb API Integration & Query Compilation Engine</h2>
+      <p style="font-size: 8.5pt; color: #4B5563; margin-bottom: 2mm;">
+        The function <code>buildDiscoverUrl()</code> in <code>src/services/tmdb.ts</code> maps subjective vibe options into TMDb v3 Discover parameters:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Filter Type</th>
+            <th>Vibe Input</th>
+            <th>TMDb v3 Discover Parameter</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Endpoint</strong></td>
+            <td><code>fmt: 'tv'</code> vs <code>fmt: 'movie'</code></td>
+            <td><code>https://api.themoviedb.org/3/discover/tv</code> vs <code>/discover/movie</code></td>
+          </tr>
+          <tr>
+            <td><strong>Quality Filter</strong></td>
+            <td>Global Baseline</td>
+            <td><code>include_adult=false</code> and <code>vote_count.gte=20</code> (removes low-sample noise)</td>
+          </tr>
+          <tr>
+            <td><strong>Runtime</strong></td>
+            <td>Quick (&le;90m) / Epic (&ge;145m)</td>
+            <td><code>with_runtime.lte=90</code> / <code>with_runtime.gte=145</code> (Movies only)</td>
+          </tr>
+          <tr>
+            <td><strong>Maturity</strong></td>
+            <td>Kids (G/PG) vs Solo (R)</td>
+            <td><code>certification_country=US</code> & <code>certification=G|PG</code> vs <code>R|NC-17</code></td>
+          </tr>
+          <tr>
+            <td><strong>Animation Anchor</strong></td>
+            <td>Animation requested</td>
+            <td><code>with_genres=16,A|B</code> (Forces animation ID 16 so live-action doesn't swamp results)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>8. Critical Bug Fix: TV vs. Movie Genre Taxonomy</h2>
+      <div class="box">
+        <div class="box-title">Why TV Returned 0 Results While Movies Returned 180+</div>
+        <div class="box-body">
+          <strong>Root Cause:</strong> TMDb uses completely different genre IDs for TV shows than for movies. For movies, Action is <code>28</code> and Adventure is <code>12</code>. For TV shows, IDs 28 and 12 <em>do not exist</em>; TMDb combines them into <code>10759</code> ("Action & Adventure"). Similarly, Sci-Fi/Fantasy is <code>10765</code> (not 878/14). When querying TV with Movie IDs, TMDb evaluated the query as invalid and returned 0.<br><br>
+          <strong>Resolution:</strong> Implemented <code>TV_GENRE_TO_TMDB_ID</code> and <code>TV_MOOD_QUERY_PARAMS</code>. When <code>isTv</code> is true, the engine dynamically swaps IDs to TV standards (e.g. Action & Adventure &rarr; <code>10759</code>). The exact query now returns <strong>1,421 TV shows</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Cinevault Presentation Technical Brief</span>
+      <span>Confidential · Page 2 of 3</span>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 3 ================= -->
+  <div class="page">
+    <div class="header">
+      <div class="header-title">Cinevault Technical Dossier</div>
+      <div class="header-tag">Resiliency, Performance & Presenter Cheat Sheet</div>
+    </div>
+
+    <div class="content">
+      <h2>9. Performance Optimizations Implemented</h2>
+      <div class="grid-2">
+        <div class="box">
+          <div class="box-title">Concurrent Dual-Page Fetch (40 Titles)</div>
+          <div class="box-body">
+            TMDb returns 20 titles per page. Cinevault dispatches <code>page=1</code> and <code>page=2</code> in parallel on initial load, doubling catalog density to 40 titles without doubling latency. Client-side <code>Set</code> deduplication ensures zero repeated items.
+          </div>
+        </div>
+        <div class="box">
+          <div class="box-title">Just-In-Time (JIT) Enrichment Pipeline</div>
+          <div class="box-body">
+            Feed cards only fetch lightweight thumbnail metadata (~15KB per 20 items). Heavy details (YouTube trailers, full cast credits, and streaming provider links) are fetched on-demand only when a user opens a title, then cached in <code>mediaRegistry</code>.
+          </div>
+        </div>
+      </div>
+
+      <h2>10. Dual-Mode Resiliency: Offline Fallback Engine</h2>
+      <div class="box">
+        <div class="box-title">Graceful Degradation Without Internet or API Keys</div>
+        <div class="box-body">
+          If no API key is provided, or if TMDb suffers rate-limiting or network downtime, <code>fetchDiscoverMovies()</code> catches the error and executes <code>getCuratedMedia()</code> across <code>CURATED_MEDIA_CATALOG</code>. This applies format, mood, genre, and maturity filters client-side in memory, guaranteeing the app never presents an empty or broken screen during a demo.
+        </div>
+      </div>
+
+      <h2>11. Presenter Cheat Sheet: Quick Answers for Tomorrow</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 28%;">Expected Question</th>
+            <th style="width: 72%;">Direct Talking Point Answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>"Why did TV show return 0 results earlier?"</strong></td>
+            <td>TMDb uses distinct genre taxonomies between movies and TV (e.g. Action in Movies is ID 28, but in TV it is ID 10759). We resolved this by implementing medium-specific genre mapping (<code>TV_GENRE_TO_TMDB_ID</code>), which immediately expanded the match pool to over 1,400 titles.</td>
+          </tr>
+          <tr>
+            <td><strong>"Where is user data saved?"</strong></td>
+            <td>Watchlists and watched history are persisted in browser <code>localStorage</code>. Active feed recommendations and filter selections are held in React Context memory for instant speed during the session.</td>
+          </tr>
+          <tr>
+            <td><strong>"How are trailers and streaming links handled?"</strong></td>
+            <td>Trailers are embedded directly via privacy-enhanced YouTube iframe modals. Streaming availability links are dynamically compiled deep searches targeting Netflix, Prime, Disney+, Max, Apple TV, Hulu, and Criterion.</td>
+          </tr>
+          <tr>
+            <td><strong>"What happens if the TMDb API goes down?"</strong></td>
+            <td>Cinevault features an automated fallback engine (<code>getCuratedMedia</code>) that intercepts network failures and filters a local verified catalog in memory with zero interruption to the user experience.</td>
+          </tr>
+          <tr>
+            <td><strong>"What is the next technical step on the roadmap?"</strong></td>
+            <td>Phase 1: Persistent storage sync for vibe selections and feed cache in <code>localStorage</code>. Phase 2: Natural-language semantic vector search powered by the Gemini API to allow conversational vibe prompts.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>12. Summary Checklist for Live Demo</h2>
+      <div class="box box-amber">
+        <div class="box-body">
+          <ul style="margin-bottom: 0;">
+            <li><strong>Demo Flow:</strong> Start at <code>/vibe</code> &rarr; Complete the 6 steps &rarr; Tap "Open my feed" &rarr; Show 2:3 Grid View & List View toggles &rarr; Click title for Trailer & Streaming Links &rarr; Bookmark to Watchlist &rarr; Show bottom nav badge count.</li>
+            <li><strong>Key Metric to Highlight:</strong> 18-minute decision paralysis reduced to a 30-second curation funnel.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Cinevault Presentation Technical Brief</span>
+      <span>Confidential · Page 3 of 3 · End of Brief</span>
+    </div>
+  </div>
+
+</body>
+</html>
