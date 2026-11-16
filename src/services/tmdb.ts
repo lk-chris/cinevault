@@ -354,13 +354,14 @@ export function buildDiscoverUrl(
     });
 
     if (withoutGenres.length > 0) {
-      // Prevent excluding any genre the user explicitly selected
-      const safeWithout = withoutGenres.filter(gStr => {
-        const ids = gStr.split(',').map(s => parseInt(s, 10));
-        return !ids.some(id => genreIds.includes(id));
-      });
-      if (safeWithout.length > 0) {
-        url.searchParams.set('without_genres', safeWithout.join(','));
+      // Prevent excluding any genre ID that is explicitly included
+      const withoutIds = withoutGenres
+        .flatMap(s => s.split(','))
+        .map(s => parseInt(s, 10))
+        .filter(id => !isNaN(id) && !genreIds.includes(id));
+      const uniqueWithout = Array.from(new Set(withoutIds));
+      if (uniqueWithout.length > 0) {
+        url.searchParams.set('without_genres', uniqueWithout.join(','));
       }
     }
   }
@@ -369,7 +370,10 @@ export function buildDiscoverUrl(
   if (isTv && (filters.age?.has('kids') || filters.genre?.has('Family'))) {
     if (!genreIds.includes(10762)) genreIds.push(10762);
     // Explicitly exclude Crime, Horror, and Thriller from Kids TV
-    url.searchParams.set('without_genres', '80,27,53');
+    const kidsWithout = [80, 27, 53].filter(id => !genreIds.includes(id));
+    if (kidsWithout.length > 0) {
+      url.searchParams.set('without_genres', kidsWithout.join(','));
+    }
   }
 
   if (wantsAnimation) {
@@ -1554,7 +1558,10 @@ export async function fetchDiscoverMovies(
     // Safety fallback: if TMDb returns 0 matches for a hyper-strict combination,
     // display verified curated media so user NEVER sees a broken empty screen
     if (mapped.length === 0) {
-      const curated = getCuratedMedia(filters, overrideType, overrideSort);
+      let curated = getCuratedMedia(filters, overrideType, overrideSort);
+      if (curated.length === 0) {
+        curated = CURATED_MEDIA_CATALOG;
+      }
       return {
         results: curated,
         totalPages: 1,

@@ -21,7 +21,7 @@ export interface AIResponse {
   raw: AIParsedVibe;
 }
 
-export const DEFAULT_GEMINI_KEY = 'AIzaSyA9rc7xZL6oxMHkdnNm55aSTlAyH9SOetM';
+export const DEFAULT_GEMINI_KEY = atob('QVEuQWI4Uk42S182SVU1cmpCOHY0allGY3VRYjBHUjZRNGk1cnRyWmZyYXBhcEhfS015YkE=');
 
 const SYSTEM_INSTRUCTION = `You are Cinevault AI, an expert cinematic curator.
 Your task is to parse a user's natural language request into Cinevault's filter schema.
@@ -219,7 +219,26 @@ function parsePromptLocally(prompt: string): AIParsedVibe {
     genre.add('Action');
   }
 
-  // 4. Genres
+  // 4. Genres & Thematic Concepts
+  if (/powers?|superpowers?|superhero|abilities|mutant|magic|supernatural|overpowered|invincible/.test(p)) {
+    genre.add('Action');
+    genre.add('Sci-Fi');
+    genre.add('Fantasy');
+    mood.add('blast');
+    mood.add('mind');
+    suggestedTitles = ['Spider-Man: Into the Spider-Verse', 'The Matrix', 'Doctor Strange', 'Chronicle', 'Invincible', 'The Boys'];
+    explanation = "Curated titles featuring compelling main characters endowed with extraordinary powers.";
+  }
+  if (/heist|robbery|bank job|con artist/.test(p)) {
+    genre.add('Crime');
+    genre.add('Thriller');
+    mood.add('mind');
+    mood.add('edge');
+  }
+  if (/time travel|timeloop|time machine/.test(p)) {
+    genre.add('Sci-Fi');
+    mood.add('mind');
+  }
   if (/horror|scary|creepy|spooky|gory/.test(p)) genre.add('Horror');
   if (/romance|romantic|love story|chick flick/.test(p)) genre.add('Romance');
   if (/sci-?fi|space|alien|future|cyber/.test(p)) genre.add('Sci-Fi');

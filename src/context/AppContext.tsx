@@ -138,7 +138,11 @@ function loadSavedMediaRegistry(): Map<number, CinevaultMedia> {
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [apiKey] = useState<string>(() => {
-    return localStorage.getItem('cinevault_tmdb_key') || import.meta.env.VITE_TMDB_API_KEY || DEFAULT_TMDB_KEY;
+    const saved = localStorage.getItem('cinevault_tmdb_key');
+    if (saved && (saved.startsWith('AIzaSy') || saved.startsWith('AQ.'))) {
+      return DEFAULT_TMDB_KEY;
+    }
+    return saved || import.meta.env.VITE_TMDB_API_KEY || DEFAULT_TMDB_KEY;
   });
 
   // ─── ONBOARDING / VIBE STATE ───
@@ -363,7 +367,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // ─── AI VIBE STATE ───
   const [geminiKey] = useState<string>(() => {
-    return localStorage.getItem('cinevault_gemini_key') || import.meta.env.VITE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+    const saved = localStorage.getItem('cinevault_gemini_key');
+    if (saved && !saved.startsWith('AIzaSyA9rc7x')) {
+      return saved;
+    }
+    return import.meta.env.VITE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
   });
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [aiExplanation, setAiExplanation] = useState<string | null>(() => {
