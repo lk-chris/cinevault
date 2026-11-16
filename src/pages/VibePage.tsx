@@ -7,6 +7,7 @@ import PosterTile from '../components/vibe/PosterTile';
 import TimeSvgTile from '../components/vibe/TimeSvgTile';
 import PillSelector from '../components/vibe/PillSelector';
 import VibeBottomBar from '../components/vibe/VibeBottomBar';
+import AiPromptBar from '../components/common/AiPromptBar';
 
 export default function VibePage() {
   const navigate = useNavigate();
@@ -44,6 +45,20 @@ export default function VibePage() {
             ? "We'll curate your feed from these picks."
             : "You haven't set your vibe yet. Get started below."}
         </p>
+
+        {/* Cinevault AI Natural Language Box */}
+        <div className="mb-6">
+          <AiPromptBar />
+        </div>
+
+        {/* Divider for step by step */}
+        {sc && (
+          <div className="flex items-center gap-3 my-5 text-xs text-t2 font-mono uppercase">
+            <span className="flex-1 h-px bg-white/10" />
+            <span>Or configure step-by-step below</span>
+            <span className="flex-1 h-px bg-white/10" />
+          </div>
+        )}
 
         {sc ? (
           /* Step content */

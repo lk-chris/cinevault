@@ -18,6 +18,10 @@ import {
   fetchTMDbDetails,
   CURATED_MEDIA_CATALOG
 } from '../services/tmdb';
+import {
+  parseVibePromptWithAI,
+  DEFAULT_GEMINI_KEY
+} from '../services/ai';
 
 interface AppContextType {
   apiKey: string;
@@ -64,6 +68,11 @@ interface AppContextType {
   toastMsg: string | null;
   sheetContent: React.ReactNode | null;
   setSheetContent: React.Dispatch<React.SetStateAction<React.ReactNode | null>>;
+  geminiKey: string;
+  aiLoading: boolean;
+  aiExplanation: string | null;
+  curateWithAI: (prompt: string) => Promise<boolean>;
+  clearAiExplanation: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -351,6 +360,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [revs]);
 
+  // ─── AI VIBE STATE ───
+  const [geminiKey] = useState<string>(() => {
+    return localStorage.getItem('cinevault_gemini_key') || import.meta.env.VITE_GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+  });
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(() => {
+    return sessionStorage.getItem('cinevault_ai_explanation') || null;
+  });
+
+  const clearAiExplanation = useCallback(() => {
+    setAiExplanation(null);
+    sessionStorage.removeItem('cinevault_ai_explanation');
+  }, []);
+
   // ─── SHEET MODAL STATE ───
   const [sheetContent, setSheetContent] = useState<React.ReactNode | null>(null);
 
@@ -546,10 +569,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.warn('Failed to clear vibe storage:', e);
     }
     loadFeed(fresh, 'all', 'popularity.desc');
+    clearAiExplanation();
     toast("Feed and vibe reset");
     if (onComplete) onComplete();
     window.scrollTo(0, 0);
-  }, [loadFeed, toast]);
+  }, [clearAiExplanation, loadFeed, toast]);
+
+  const curateWithAI = useCallback(async (prompt: string): Promise<boolean> => {
+    if (!prompt.trim()) return false;
+    setAiLoading(true);
+    try {
+      toast("Asking Cinevault AI...");
+      const res = await parseVibePromptWithAI(prompt, geminiKey);
+      setSel(res.filters);
+      setAiExplanation(res.explanation);
+      try {
+        sessionStorage.setItem('cinevault_ai_explanation', res.explanation);
+      } catch {}
+      setCur(SCREENS.length);
+      await loadFeed(res.filters);
+      toast("Feed curated by AI!");
+      return true;
+    } catch (err: any) {
+      console.error('AI curation failed:', err);
+      toast(err.message || 'AI curation failed. Please try again.');
+      return false;
+    } finally {
+      setAiLoading(false);
+    }
+  }, [geminiKey, loadFeed, toast]);
 
   // ─── DETAIL & REGISTRY HELPERS ───
   const getMediaById = (id: number): CinevaultMedia | undefined => {
@@ -687,6 +735,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toastMsg,
     sheetContent,
     setSheetContent,
+    geminiKey,
+    aiLoading,
+    aiExplanation,
+    curateWithAI,
+    clearAiExplanation,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
