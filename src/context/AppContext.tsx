@@ -16,6 +16,7 @@ import {
 import {
   fetchDiscoverMovies,
   fetchTMDbDetails,
+  fetchSpecificTitles,
   CURATED_MEDIA_CATALOG
 } from '../services/tmdb';
 import {
@@ -587,7 +588,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         sessionStorage.setItem('cinevault_ai_explanation', res.explanation);
       } catch {}
       setCur(SCREENS.length);
+
+      // Search for specific reference titles if suggested by AI (e.g. for "Paw Patrol", "Interstellar")
+      let specificItems: CinevaultMedia[] = [];
+      if (res.suggestedTitles && res.suggestedTitles.length > 0) {
+        try {
+          specificItems = await fetchSpecificTitles(apiKey, res.suggestedTitles);
+        } catch (e) {
+          console.warn('Failed to fetch AI suggested titles:', e);
+        }
+      }
+
       await loadFeed(res.filters);
+
+      // Prepend specific matching titles at the top of the feed
+      if (specificItems.length > 0) {
+        setFeedItems(prev => {
+          const specificIds = new Set(specificItems.map(s => s.id));
+          const rest = prev.filter(p => !specificIds.has(p.id));
+          return [...specificItems, ...rest];
+        });
+        setMediaRegistry(prev => {
+          const next = new Map(prev);
+          specificItems.forEach(item => next.set(item.id, item));
+          return next;
+        });
+      }
+
       toast("Feed curated by AI!");
       return true;
     } catch (err: any) {
@@ -597,7 +624,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setAiLoading(false);
     }
-  }, [geminiKey, loadFeed, toast]);
+  }, [apiKey, geminiKey, loadFeed, toast]);
 
   // ─── DETAIL & REGISTRY HELPERS ───
   const getMediaById = (id: number): CinevaultMedia | undefined => {

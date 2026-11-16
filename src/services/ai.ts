@@ -9,11 +9,13 @@ export interface AIParsedVibe {
   era: string[];
   lang: string[];
   explanation: string;
+  suggestedTitles?: string[];
 }
 
 export interface AIResponse {
   filters: Sel;
   explanation: string;
+  suggestedTitles: string[];
   raw: AIParsedVibe;
 }
 
@@ -22,15 +24,17 @@ export const DEFAULT_GEMINI_KEY = 'AIzaSyA9rc7xZL6oxMHkdnNm55aSTlAyH9SOetM';
 const SYSTEM_INSTRUCTION = `You are Cinevault AI, an expert cinematic curator.
 Your task is to parse a user's natural language request into Cinevault's filter schema.
 Allowed values for each filter:
-- fmt: 'movie' (Feature film), 'tv' (TV show), 'mini' (Limited series), 'anime' (Anime/animation), 'doc' (Documentary)
-- mood: 'brain' (Comfort / comedy / easy popcorn), 'edge' (Suspense / action / thriller), 'mind' (Sci-fi / mystery / cerebral), 'dark' (Noir / crime / gritty drama), 'tear' (Emotional / drama / romance), 'blast' (High-octane blockbusters)
+- fmt: 'movie' (Feature film), 'tv' (TV show or animated series), 'mini' (Limited series), 'anime' (STRICTLY Japanese anime only), 'doc' (Documentary).
+  CRITICAL: For Western cartoons, preschool shows, Disney, Pixar, DreamWorks, or kids animated franchises (like Paw Patrol, Bluey, SpongeBob, Peppa Pig, Minions, Toy Story), NEVER choose 'anime'. Use 'tv' or 'movie' and add 'Animation' to genre! Only use 'anime' if the user explicitly mentions Japanese anime or manga.
+- mood: 'brain' (Comfort / comedy / easy popcorn / preschool), 'edge' (Suspense / action / thriller), 'mind' (Sci-fi / mystery / cerebral), 'dark' (Noir / crime / gritty drama), 'tear' (Emotional / drama / romance), 'blast' (High-octane blockbusters)
 - genre: Action, Adventure, Animation, Comedy, Crime, Documentary, Drama, Family, Fantasy, History, Horror, Music, Mystery, Romance, Sci-Fi, Thriller, War, Western
 - time: 'q' (<=90 min), 's' (90-125 min), 'e' (>=145 min), 'any' (Any runtime)
-- age: 'kids' (G or PG, family/kids), 'fam' (PG-13, teens), 'date' (Date night), 'solo' (R or TV-MA, mature)
+- age: 'kids' (G or PG, preschool, young family), 'fam' (PG-13, teens), 'date' (Date night), 'solo' (R or TV-MA, mature)
 - era: 'n' (2024-2026 new releases), 'a' (2010s hits), 'b' (2000s nostalgia), 'c' (90s classics), 'g' (Golden age)
 - lang: 'en' (English/Hollywood), 'ko' (Korean), 'ja' (Japanese), 'int' (International subtitled)
 
-Output explanation must be one concise, encouraging sentence (e.g., "Found cozy 90s mystery films with witty twists under 2 hours.").
+If the user references a specific franchise, show, movie, or character (e.g. "something like Paw Patrol", "movies like Knives Out", "shows like Stranger Things"), ALWAYS provide 4 to 6 real, directly comparable titles in suggestedTitles.
+Output explanation must be one concise, encouraging sentence (e.g., "Found fun animated rescue adventures and preschool shows like Paw Patrol.").
 Always output valid JSON conforming to the schema.`;
 
 export async function parseVibePromptWithAI(
@@ -72,8 +76,9 @@ export async function parseVibePromptWithAI(
               era: { type: 'ARRAY', items: { type: 'STRING' } },
               lang: { type: 'ARRAY', items: { type: 'STRING' } },
               explanation: { type: 'STRING' },
+              suggestedTitles: { type: 'ARRAY', items: { type: 'STRING' } },
             },
-            required: ['fmt', 'mood', 'genre', 'time', 'explanation'],
+            required: ['fmt', 'genre', 'age', 'lang', 'explanation'],
           },
         },
       };
@@ -113,6 +118,7 @@ export async function parseVibePromptWithAI(
       return {
         filters,
         explanation: parsed.explanation || 'Curated using Cinevault AI.',
+        suggestedTitles: Array.isArray(parsed.suggestedTitles) ? parsed.suggestedTitles : [],
         raw: parsed,
       };
     } catch (err: any) {

@@ -316,10 +316,12 @@ export function buildDiscoverUrl(
     });
   }
 
-  // If anime format selected: restrict to Japanese language
+  // If anime format selected: restrict to Japanese language only if English was not specifically requested
   if (isAnime) {
     if (!genreIds.includes(16)) genreIds.push(16); // Animation
-    url.searchParams.set('with_original_language', 'ja');
+    if (!filters.lang?.has('en')) {
+      url.searchParams.set('with_original_language', 'ja');
+    }
   }
 
   // If documentary selected
@@ -426,7 +428,7 @@ export function buildDiscoverUrl(
   }
 
   // Language
-  if (filters.lang && filters.lang.size > 0 && !isAnime) {
+  if (filters.lang && filters.lang.size > 0) {
     if (filters.lang.has('en')) {
       url.searchParams.set('with_original_language', 'en');
     } else if (filters.lang.has('ko')) {
@@ -580,6 +582,53 @@ export async function fetchTMDbDetails(
     backdropUrl: getTMDBBackdrop(data.backdrop_path),
     posterUrl: getTMDBPoster(data.poster_path),
   };
+}
+
+// Search TMDb for specific titles suggested by AI (e.g. "Paw Patrol: The Movie", "Bluey")
+export async function fetchSpecificTitles(
+  apiKey: string,
+  titles: string[]
+): Promise<CinevaultMedia[]> {
+  const trimmedKey = apiKey.trim();
+  if (!trimmedKey || !titles || titles.length === 0) return [];
+
+  const results: CinevaultMedia[] = [];
+  const seenIds = new Set<number>();
+
+  const isBearer = trimmedKey.startsWith('ey') || trimmedKey.length > 50;
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (isBearer) headers['Authorization'] = `Bearer ${trimmedKey}`;
+
+  for (const title of titles) {
+    if (!title || typeof title !== 'string') continue;
+    try {
+      const url = isBearer
+        ? `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(title)}&include_adult=false&language=en-US`
+        : `https://api.themoviedb.org/3/search/multi?api_key=${encodeURIComponent(trimmedKey)}&query=${encodeURIComponent(title)}&include_adult=false&language=en-US`;
+
+      const res = await fetch(url, { headers });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const hits = (data.results || []).filter(
+        (item: any) =>
+          item &&
+          item.id &&
+          !seenIds.has(item.id) &&
+          item.poster_path &&
+          (item.media_type === 'movie' || item.media_type === 'tv')
+      );
+
+      if (hits.length > 0) {
+        const topHit = hits[0];
+        seenIds.add(topHit.id);
+        results.push(mapTMDbItemToMedia(topHit, topHit.media_type === 'tv' ? 'tv' : 'movie'));
+      }
+    } catch (e) {
+      console.warn('Error fetching specific title:', title, e);
+    }
+  }
+
+  return results;
 }
 
 // ──────────────────────────────────────────────────────────────
