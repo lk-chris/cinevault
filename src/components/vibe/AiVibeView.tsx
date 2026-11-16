@@ -40,6 +40,28 @@ const REFINEMENT_SUGGESTIONS = [
   "Family safe"
 ];
 
+const STORAGE_KEY_AI_MESSAGES = 'cinevault_ai_messages';
+
+const loadSavedAiMessages = (): Message[] => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_AI_MESSAGES);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Ensure the last AI message is marked isLive: true so chips and buttons remain interactive
+        const lastIdx = parsed.length - 1;
+        return parsed.map((m, idx) => ({
+          ...m,
+          isLive: idx === lastIdx && m.sender === 'ai'
+        }));
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load saved AI messages:', e);
+  }
+  return [];
+};
+
 export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
   const navigate = useNavigate();
   const { sel, setSel, curateWithAI, aiLoading, hasCurated } = useApp();
@@ -47,7 +69,7 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
   const [inputVal, setInputVal] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('Listening...');
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(loadSavedAiMessages);
 
   const recognitionRef = useRef<any>(null);
   const simTimerRef = useRef<any>(null);
@@ -59,6 +81,19 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
   useEffect(() => {
     selRef.current = sel;
   }, [sel]);
+
+  // Persist messages in localStorage across route changes
+  useEffect(() => {
+    try {
+      if (messages.length > 0) {
+        localStorage.setItem(STORAGE_KEY_AI_MESSAGES, JSON.stringify(messages));
+      } else {
+        localStorage.removeItem(STORAGE_KEY_AI_MESSAGES);
+      }
+    } catch (e) {
+      console.warn('Failed to persist AI messages:', e);
+    }
+  }, [messages]);
 
   // Extract active filters from AppContext `sel`
   const getActiveFilterItems = (currentSel = selRef.current): FilterItem[] => {
@@ -79,7 +114,7 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
     return items;
   };
 
-  // If already curated upon first visit, show existing vibe summary message
+  // If already curated upon first visit and no prior chat history exists, show initial summary
   useEffect(() => {
     if (messages.length === 0 && hasCurated) {
       const items = getActiveFilterItems();
@@ -96,7 +131,12 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
         ]);
       }
     }
-  }, []);
+  }, [hasCurated]);
+
+  const handleClearChat = () => {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY_AI_MESSAGES);
+  };
 
   // Auto-scroll when messages update
   useEffect(() => {
@@ -287,13 +327,24 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
             Cine<b className="text-am font-bold">Vault</b>
           </div>
 
-          <button
-            onClick={onPickManually}
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-t2 hover:text-white bg-s1 hover:bg-s2 border border-white/[0.08] px-3.5 py-1.5 rounded-full transition-colors cursor-pointer"
-          >
-            <SlidersHorizontal size={13} className="text-t2" />
-            <span>Pick manually</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {messages.length > 0 && (
+              <button
+                onClick={handleClearChat}
+                className="inline-flex items-center gap-1 text-xs font-mono text-t2 hover:text-white bg-s1 hover:bg-s2 border border-white/[0.08] px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+                title="Start a new AI conversation"
+              >
+                <span>New prompt</span>
+              </button>
+            )}
+            <button
+              onClick={onPickManually}
+              className="inline-flex items-center gap-1.5 text-xs font-mono text-t2 hover:text-white bg-s1 hover:bg-s2 border border-white/[0.08] px-3.5 py-1.5 rounded-full transition-colors cursor-pointer"
+            >
+              <SlidersHorizontal size={13} className="text-t2" />
+              <span>Pick manually</span>
+            </button>
+          </div>
         </div>
       </header>
 

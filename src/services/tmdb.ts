@@ -270,7 +270,7 @@ export function buildDiscoverUrl(
 
   if (overrideType) {
     endpoint = overrideType;
-  } else if (filters.fmt && (filters.fmt.has('tv') || filters.fmt.has('mini'))) {
+  } else if (filters.fmt && (filters.fmt.has('tv') || filters.fmt.has('mini') || filters.fmt.has('anime'))) {
     endpoint = 'tv';
   }
 
@@ -398,7 +398,8 @@ export function buildDiscoverUrl(
   }
 
   // Who's Watching / Age Certification
-  if (!isTv && filters.age && filters.age.size > 0) {
+  // Suppress US certification country for foreign/anime films to prevent dropping valid titles
+  if (!isTv && !isAnime && !filters.lang?.has('ja') && !filters.lang?.has('ko') && !filters.lang?.has('int') && filters.age && filters.age.size > 0) {
     url.searchParams.set('certification_country', 'US');
     if (filters.age.has('kids')) {
       // Strict G & PG for pure family and cartoons

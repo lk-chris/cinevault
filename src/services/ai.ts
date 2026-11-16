@@ -146,6 +146,51 @@ function parsePromptLocally(prompt: string): AIParsedVibe {
     };
   }
 
+  if (p.includes('kaiju no 8') || p.includes('kaiju no. 8') || p.includes('kaiju no8') || p.includes('kaiju')) {
+    fmt.add('anime');
+    genre.add('Action');
+    genre.add('Sci-Fi');
+    genre.add('Animation');
+    mood.add('blast');
+    mood.add('edge');
+    lang.add('ja');
+    suggestedTitles = ['Kaiju No. 8', 'Attack on Titan', 'Solo Leveling', 'Chainsaw Man', 'JUJUTSU KAISEN', 'Godzilla Minus One'];
+    explanation = "Curated high-octane monster battles, sci-fi action, and top-tier anime like Kaiju No. 8.";
+    return {
+      fmt: Array.from(fmt),
+      mood: Array.from(mood),
+      genre: Array.from(genre),
+      time: Array.from(time),
+      age: Array.from(age),
+      era: Array.from(era),
+      lang: Array.from(lang),
+      explanation,
+      suggestedTitles,
+    };
+  }
+
+  if (p.includes('solo leveling') || p.includes('attack on titan') || p.includes('jujutsu kaisen') || p.includes('chainsaw man') || p.includes('demon slayer')) {
+    fmt.add('anime');
+    genre.add('Action');
+    genre.add('Animation');
+    mood.add('blast');
+    mood.add('edge');
+    lang.add('ja');
+    suggestedTitles = ['Solo Leveling', 'Attack on Titan', 'JUJUTSU KAISEN', 'Chainsaw Man', 'Kaiju No. 8', 'Demon Slayer: Kimetsu no Yaiba'];
+    explanation = "Curated dark fantasy battles, monster hunting, and action anime.";
+    return {
+      fmt: Array.from(fmt),
+      mood: Array.from(mood),
+      genre: Array.from(genre),
+      time: Array.from(time),
+      age: Array.from(age),
+      era: Array.from(era),
+      lang: Array.from(lang),
+      explanation,
+      suggestedTitles,
+    };
+  }
+
   // 2. Format
   if (/anime|manga|ghibli/.test(p)) {
     fmt.add('anime');

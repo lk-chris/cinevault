@@ -539,7 +539,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadFeed();
     } else {
       if (onComplete) onComplete();
-      loadFeed();
+      // Only trigger loadFeed if feedItems is currently empty so we don't wipe out AI-curated results
+      if (feedItems.length === 0) {
+        loadFeed();
+      }
     }
     window.scrollTo(0, 0);
   };
@@ -566,6 +569,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('cinevault_feed_items');
       localStorage.removeItem('cinevault_category_filter');
       localStorage.removeItem('cinevault_sort_filter');
+      localStorage.removeItem('cinevault_ai_messages');
     } catch (e) {
       console.warn('Failed to clear vibe storage:', e);
     }
