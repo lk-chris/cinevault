@@ -585,7 +585,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setAiLoading(true);
     try {
       toast("Asking Cinevault AI...");
-      const res = await parseVibePromptWithAI(prompt, geminiKey);
+      const res = await parseVibePromptWithAI(prompt, geminiKey, apiKey);
       setSel(res.filters);
       setAiExplanation(res.explanation);
       try {

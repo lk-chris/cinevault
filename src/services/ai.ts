@@ -1,4 +1,6 @@
 import type { Sel } from '../types';
+import { TMDB_ID_TO_GENRE } from './tmdb';
+import { DEFAULT_TMDB_KEY } from '../constants/vibeData';
 
 export interface AIParsedVibe {
   fmt: string[];
@@ -38,9 +40,124 @@ Output explanation must be one concise, encouraging sentence.
 Always output valid JSON conforming to the schema.`;
 
 /**
- * Intelligent Local Fallback Parser
- * Guarantees Cinevault ALWAYS returns 100% accurate, high-quality
- * curation even when offline or if an API key is blocked.
+ * Generic Title Reference Extractor
+ * Identifies if the user is asking for titles similar to an existing movie, show, or anime.
+ */
+export function extractReferenceTitle(prompt: string): string | null {
+  const p = prompt.trim();
+
+  // 1. Explicit quotes: "Inception" or 'Kaiju No. 8'
+  const quoteMatch = p.match(/["']([^"']{2,60})["']/);
+  if (quoteMatch && quoteMatch[1]) {
+    return quoteMatch[1].trim();
+  }
+
+  // 2. Similarity and affinity patterns
+  const patterns = [
+    /(?:like|similar to|in the style of|loved|love|finished|fans of|recommendations for|recommendation for|watch next after|watch after|movies like|shows like|anime like|series like|films like|something like|anything like)\s+([^,?.!]+?)(?:\s+(?:do you|what|can you|that|where|with|under|less|more|or|and|for|please|\?|\.|\!|\,)|$)/i,
+    /(?:i like|i love|i loved|i enjoyed|i watched)\s+([^,?.!]+?)(?:\s+(?:do you|what|can you|that|where|with|under|less|more|or|and|for|please|\?|\.|\!|\,)|$)/i,
+  ];
+
+  for (const pat of patterns) {
+    const match = p.match(pat);
+    if (match && match[1]) {
+      const candidate = match[1].replace(/['"]/g, '').trim();
+      const stopWords = /^(movie|movies|show|shows|anime|film|films|series|something|anything|what|good|great|nothing|any|recommendations?)$/i;
+      if (candidate.length >= 2 && !stopWords.test(candidate)) {
+        return candidate;
+      }
+    }
+  }
+
+  // 3. Short standalone title search (e.g., user directly entered "Interstellar" or "Succession")
+  const words = p.split(/\s+/);
+  const isGenericVibe = /^(short|funny|sad|dark|action|comedy|horror|drama|date night|family|mind bending|scifi|sci-fi|romantic|thriller|quick|epic)$/i.test(p);
+  const hasTimeOrConstraint = /under|hours|minutes|tonight|date night|family safe|with subtitles/i.test(p);
+  if (words.length <= 4 && !isGenericVibe && !hasTimeOrConstraint) {
+    const candidate = p.replace(/[?.!]$/, '').trim();
+    if (candidate.length >= 2) return candidate;
+  }
+
+  return null;
+}
+
+/**
+ * Dynamic Universal Franchise & Recommendation Resolver
+ * Queries TMDb's live multi-search and recommendation endpoints to dynamically resolve
+ * ANY movie, TV series, or anime referenced by the user.
+ */
+export async function resolveDynamicRecommendations(
+  titleQuery: string,
+  tmdbApiKey: string = DEFAULT_TMDB_KEY
+): Promise<{
+  matchedTitle: string;
+  mediaType: 'movie' | 'tv';
+  isAnime: boolean;
+  genres: string[];
+  suggestedTitles: string[];
+} | null> {
+  const trimmedKey = tmdbApiKey.trim() || DEFAULT_TMDB_KEY;
+  const isBearer = trimmedKey.startsWith('ey') || trimmedKey.length > 50;
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (isBearer) headers['Authorization'] = `Bearer ${trimmedKey}`;
+
+  try {
+    const searchUrl = isBearer
+      ? `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(titleQuery)}&include_adult=false&language=en-US`
+      : `https://api.themoviedb.org/3/search/multi?api_key=${encodeURIComponent(trimmedKey)}&query=${encodeURIComponent(titleQuery)}&include_adult=false&language=en-US`;
+
+    const res = await fetch(searchUrl, { headers });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const hits = (data.results || []).filter(
+      (h: any) => h && h.poster_path && (h.media_type === 'movie' || h.media_type === 'tv')
+    );
+    if (hits.length === 0) return null;
+
+    const top = hits[0];
+    const type: 'movie' | 'tv' = top.media_type === 'tv' ? 'tv' : 'movie';
+    const isAnime = top.original_language === 'ja' && ((top.genre_ids || []).includes(16) || (top.overview || '').toLowerCase().includes('anime'));
+    const matchedName = top.name || top.title || titleQuery;
+
+    // Fetch official TMDb recommendations for this title
+    const recsUrl = isBearer
+      ? `https://api.themoviedb.org/3/${type}/${top.id}/recommendations?language=en-US`
+      : `https://api.themoviedb.org/3/${type}/${top.id}/recommendations?api_key=${encodeURIComponent(trimmedKey)}&language=en-US`;
+
+    let recTitles: string[] = [];
+    try {
+      const recsRes = await fetch(recsUrl, { headers });
+      if (recsRes.ok) {
+        const recsData = await recsRes.json();
+        recTitles = (recsData.results || [])
+          .filter((r: any) => r && r.poster_path)
+          .slice(0, 5)
+          .map((r: any) => r.name || r.title)
+          .filter(Boolean);
+      }
+    } catch {}
+
+    // Map genre IDs to human-readable genres
+    const genreNames = (top.genre_ids || [])
+      .map((id: number) => TMDB_ID_TO_GENRE[id])
+      .filter(Boolean);
+
+    return {
+      matchedTitle: matchedName,
+      mediaType: type,
+      isAnime,
+      genres: genreNames,
+      suggestedTitles: [matchedName, ...recTitles]
+    };
+  } catch (err) {
+    console.warn('Failed dynamic recommendation resolution:', err);
+    return null;
+  }
+}
+
+/**
+ * Intelligent Semantic Attribute Fallback Parser
+ * Handles non-title vibe requests ("short funny comedy for date night", "mind-bending sci-fi", etc.)
  */
 function parsePromptLocally(prompt: string): AIParsedVibe {
   const p = prompt.toLowerCase();
@@ -55,143 +172,7 @@ function parsePromptLocally(prompt: string): AIParsedVibe {
   let suggestedTitles: string[] = [];
   let explanation = "Here's what I picked up from your vibe.";
 
-  // 1. Franchise / Title Specific Matching
-  if (p.includes('paw patrol')) {
-    fmt.add('tv');
-    genre.add('Animation');
-    genre.add('Family');
-    genre.add('Comedy');
-    mood.add('brain');
-    age.add('kids');
-    time.add('q');
-    suggestedTitles = ['PAW Patrol', 'PAW Patrol: The Movie', 'Bluey', 'Peppa Pig', 'Octonauts'];
-    explanation = "Curated fun animated rescue adventures and preschool shows like Paw Patrol.";
-    return {
-      fmt: Array.from(fmt),
-      mood: Array.from(mood),
-      genre: Array.from(genre),
-      time: Array.from(time),
-      age: Array.from(age),
-      era: Array.from(era),
-      lang: Array.from(lang),
-      explanation,
-      suggestedTitles,
-    };
-  }
-
-  if (p.includes('bluey')) {
-    fmt.add('tv');
-    genre.add('Animation');
-    genre.add('Family');
-    genre.add('Comedy');
-    mood.add('brain');
-    age.add('kids');
-    suggestedTitles = ['Bluey', 'PAW Patrol', 'Peppa Pig', 'Hey Duggee'];
-    explanation = "Curated heartwarming, high-energy family cartoons like Bluey.";
-    return {
-      fmt: Array.from(fmt),
-      mood: Array.from(mood),
-      genre: Array.from(genre),
-      time: Array.from(time),
-      age: Array.from(age),
-      era: Array.from(era),
-      lang: Array.from(lang),
-      explanation,
-      suggestedTitles,
-    };
-  }
-
-  if (p.includes('knives out') || p.includes('whodunnit') || p.includes('murder mystery') || p.includes('glass onion')) {
-    fmt.add('movie');
-    mood.add('mind');
-    genre.add('Mystery');
-    genre.add('Comedy');
-    genre.add('Crime');
-    age.add('fam');
-    suggestedTitles = ['Knives Out', 'Glass Onion: A Knives Out Mystery', 'Death on the Nile', 'See How They Run'];
-    explanation = "Curated clever, witty murder mystery whodunnits like Knives Out.";
-    return {
-      fmt: Array.from(fmt),
-      mood: Array.from(mood),
-      genre: Array.from(genre),
-      time: Array.from(time),
-      age: Array.from(age),
-      era: Array.from(era),
-      lang: Array.from(lang),
-      explanation,
-      suggestedTitles,
-    };
-  }
-
-  if (p.includes('stranger things')) {
-    fmt.add('tv');
-    mood.add('edge');
-    mood.add('mind');
-    genre.add('Sci-Fi');
-    genre.add('Horror');
-    genre.add('Drama');
-    age.add('fam');
-    suggestedTitles = ['Stranger Things', 'Dark', 'Locke & Key', 'Super 8'];
-    explanation = "Curated supernatural 80s sci-fi mysteries and suspense series.";
-    return {
-      fmt: Array.from(fmt),
-      mood: Array.from(mood),
-      genre: Array.from(genre),
-      time: Array.from(time),
-      age: Array.from(age),
-      era: Array.from(era),
-      lang: Array.from(lang),
-      explanation,
-      suggestedTitles,
-    };
-  }
-
-  if (p.includes('kaiju no 8') || p.includes('kaiju no. 8') || p.includes('kaiju no8') || p.includes('kaiju')) {
-    fmt.add('anime');
-    genre.add('Action');
-    genre.add('Sci-Fi');
-    genre.add('Animation');
-    mood.add('blast');
-    mood.add('edge');
-    lang.add('ja');
-    suggestedTitles = ['Kaiju No. 8', 'Attack on Titan', 'Solo Leveling', 'Chainsaw Man', 'JUJUTSU KAISEN', 'Godzilla Minus One'];
-    explanation = "Curated high-octane monster battles, sci-fi action, and top-tier anime like Kaiju No. 8.";
-    return {
-      fmt: Array.from(fmt),
-      mood: Array.from(mood),
-      genre: Array.from(genre),
-      time: Array.from(time),
-      age: Array.from(age),
-      era: Array.from(era),
-      lang: Array.from(lang),
-      explanation,
-      suggestedTitles,
-    };
-  }
-
-  if (p.includes('solo leveling') || p.includes('attack on titan') || p.includes('jujutsu kaisen') || p.includes('chainsaw man') || p.includes('demon slayer')) {
-    fmt.add('anime');
-    genre.add('Action');
-    genre.add('Animation');
-    mood.add('blast');
-    mood.add('edge');
-    lang.add('ja');
-    suggestedTitles = ['Solo Leveling', 'Attack on Titan', 'JUJUTSU KAISEN', 'Chainsaw Man', 'Kaiju No. 8', 'Demon Slayer: Kimetsu no Yaiba'];
-    explanation = "Curated dark fantasy battles, monster hunting, and action anime.";
-    return {
-      fmt: Array.from(fmt),
-      mood: Array.from(mood),
-      genre: Array.from(genre),
-      time: Array.from(time),
-      age: Array.from(age),
-      era: Array.from(era),
-      lang: Array.from(lang),
-      explanation,
-      suggestedTitles,
-    };
-  }
-
-  // 2. Format
+  // 1. Format
   if (/anime|manga|ghibli/.test(p)) {
     fmt.add('anime');
     genre.add('Animation');
@@ -315,7 +296,8 @@ function parsePromptLocally(prompt: string): AIParsedVibe {
 
 export async function parseVibePromptWithAI(
   userPrompt: string,
-  apiKey: string = DEFAULT_GEMINI_KEY
+  apiKey: string = DEFAULT_GEMINI_KEY,
+  tmdbApiKey: string = DEFAULT_TMDB_KEY
 ): Promise<AIResponse> {
   const trimmedKey = (apiKey || DEFAULT_GEMINI_KEY).trim();
   const workerUrl = (import.meta as any).env?.VITE_WORKER_URL;
@@ -380,11 +362,11 @@ export async function parseVibePromptWithAI(
         }
       }
     } catch (workerErr) {
-      console.warn('Cloudflare Worker call failed, trying direct Gemini or local fallback:', workerErr);
+      console.warn('Cloudflare Worker call failed, trying direct Gemini or dynamic resolver:', workerErr);
     }
   }
 
-  // ─── 2. TRY DIRECT GEMINI API CALL ───
+  // ─── 3. TRY DIRECT GEMINI API CALL ───
   if (trimmedKey && !trimmedKey.startsWith('AIzaSyA9rc7x')) {
     const models = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
     for (const model of models) {
@@ -449,8 +431,45 @@ export async function parseVibePromptWithAI(
     }
   }
 
-  // ─── 3. HIGH-PRECISION LOCAL SEMANTIC FALLBACK ───
-  // Guarantees zero failures and accurate curation at all times
+  // ─── 4. DYNAMIC TMDB FRANCHISE & RECOMMENDATION RESOLUTION ───
+  // Works universally for ANY movie, TV series, or anime referenced by the user
+  const refTitle = extractReferenceTitle(userPrompt);
+  if (refTitle) {
+    const dynamicRecs = await resolveDynamicRecommendations(refTitle, tmdbApiKey);
+    if (dynamicRecs && dynamicRecs.suggestedTitles.length > 0) {
+      const filters: Sel = {
+        fmt: new Set([dynamicRecs.isAnime ? 'anime' : dynamicRecs.mediaType]),
+        mood: new Set(dynamicRecs.isAnime ? ['blast', 'edge'] : []),
+        genre: new Set(dynamicRecs.genres),
+        time: new Set(['any']),
+        age: new Set([]),
+        era: new Set(['n']),
+        lang: new Set(dynamicRecs.isAnime ? ['ja'] : ['en']),
+      };
+
+      const explanation = `Curated titles similar to ${dynamicRecs.matchedTitle} with matching tone and style.`;
+
+      return {
+        filters,
+        explanation,
+        suggestedTitles: dynamicRecs.suggestedTitles,
+        raw: {
+          fmt: Array.from(filters.fmt),
+          mood: Array.from(filters.mood),
+          genre: Array.from(filters.genre),
+          time: Array.from(filters.time),
+          age: Array.from(filters.age),
+          era: Array.from(filters.era),
+          lang: Array.from(filters.lang),
+          explanation,
+          suggestedTitles: dynamicRecs.suggestedTitles,
+        },
+      };
+    }
+  }
+
+  // ─── 5. HIGH-PRECISION SEMANTIC ATTRIBUTE FALLBACK ───
+  // Handles non-franchise vibe requests ("Something short and funny", "Mind-bending thriller", etc.)
   const localParsed = parsePromptLocally(userPrompt);
   const filters: Sel = {
     fmt: new Set(localParsed.fmt),
