@@ -512,46 +512,48 @@
         </div>
       </div>
 
-      <h2><span class="num">11</span> How Do We Connect AI to Cinevault?</h2>
+      <h2><span class="num">11</span> Technical Architecture: How We Connect AI to Cinevault</h2>
       <div class="card card-highlight">
-        <div class="card-title">From 6 Checkbox Steps &rarr; Natural Language "Vibe Prompts"</div>
+        <div class="card-title">The Engineering Pipeline (From Natural Language to TMDb Query)</div>
         <div class="card-text">
-          Right now, Cinevault uses 6 structured quiz buttons. Connecting AI takes this to the next level: users can just type or speak naturally, like:
-          <br>
-          <em style="color: #B45309; font-weight: 600;">"I want a cozy rainy-night mystery like Knives Out with a clever twist, under 2 hours."</em>
+          Connecting an AI (like Google Gemini or OpenAI) is not just a chatbot popup. It is a <strong>structured translation pipeline</strong> that converts a free-form human sentence directly into Cinevault's existing <code>OnboardingFilters</code> TypeScript contract:
         </div>
       </div>
 
       <div class="grid-2" style="margin-top: 2.5mm;">
         <div class="card">
-          <div class="card-title">1. Natural Language &rarr; Structured Filter</div>
+          <div class="card-title">1. Edge API Proxy (Security & Auth)</div>
           <div class="card-text">
-            <strong>How it works:</strong> The user's prompt is sent to an AI model (like Google Gemini). Using Function Calling / JSON mode, the AI extracts the exact filter criteria:
-            <code>{ type: 'movie', genres: ['Mystery', 'Comedy'], runtime: '&lt;=120', era: 'recent' }</code>
-            and hands it straight to our existing feed engine.
+            <strong>Where it runs:</strong> Never expose AI API keys on the frontend. The React client calls a serverless endpoint: <code>POST /api/ai-vibe</code> (e.g. Cloudflare Worker or Vercel Edge Function). The Worker injects the secret API key into the header and calls the Gemini API.
           </div>
         </div>
         <div class="card">
-          <div class="card-title">2. Semantic Vector Search (Thematic Matches)</div>
+          <div class="card-title">2. Structured Outputs (JSON Schema)</div>
           <div class="card-text">
-            <strong>Beyond generic tags:</strong> Standard genre tags can't capture "rainy aesthetic" or "comfort food cinema". We convert movie plots into mathematical <em>embeddings</em>. The AI matches the emotional vibe of your prompt directly against 800,000 film synopses.
-          </div>
-        </div>
-      </div>
-
-      <div class="grid-2" style="margin-top: 2.5mm;">
-        <div class="card">
-          <div class="card-title">3. AI "Why You'll Like This" Badges</div>
-          <div class="card-text">
-            Instead of just showing a generic star rating, the AI generates a customized 1-sentence note on each card:
+            <strong>Strict Type Enforcement:</strong> We provide the LLM with a JSON Schema matching Cinevault's exact <code>Sel</code> type. The LLM is forced to return valid JSON with zero conversational filler:
             <br>
-            <em style="color: #475569;">"Matches your vibe because it's fast-paced, has zero gory scenes, and wraps up in 88 minutes."</em>
+            <code>{"fmt":["movie"],"mood":["mind"],"genre":["Mystery","Comedy"],"time":["s"]}</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 2.5mm;">
+        <div class="card">
+          <div class="card-title">3. React State Hook (AppContext Integration)</div>
+          <div class="card-text">
+            <strong>Instant Feed Generation:</strong> The frontend receives the typed JSON and directly calls existing AppContext functions:
+            <br>
+            <code>const aiFilters = parseAiResponse(json);</code><br>
+            <code>setSel(aiFilters);</code><br>
+            <code>await loadFeed(aiFilters);</code>
+            <br>
+            The feed automatically updates in milliseconds.
           </div>
         </div>
         <div class="card">
-          <div class="card-title">4. Two-Person Group Vibe Matcher</div>
+          <div class="card-title">4. Vector Embeddings (Semantic RAG)</div>
           <div class="card-text">
-            Both you and a friend enter what you're each in the mood for. The AI compares both inputs and finds the sweet spot: the movie that satisfies both tastes with zero arguing.
+            <strong>For vibes beyond genre tags:</strong> For prompts like <em>"rainy aesthetic with cozy autumn vibes"</em>, we run <code>text-embedding-004</code> on the prompt and query a vector index (e.g. Cloudflare Vectorize) containing 800,000 movie synopses via Cosine Similarity.
           </div>
         </div>
       </div>
