@@ -4,6 +4,7 @@ import { AppProvider } from './context/AppContext';
 import FeedPage from './pages/FeedPage';
 import VibePage from './pages/VibePage';
 import DetailPage from './pages/DetailPage';
+import AdminApp from './admin/AdminApp';
 import Toast from './components/common/Toast';
 import SheetModal from './components/common/SheetModal';
 
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/watched" element={<FeedPage tab="wd" />} />
           <Route path="/vibe" element={<VibePage />} />
           <Route path="/title/:id" element={<DetailPage />} />
+          <Route path="/admin" element={<AdminApp />} />
           {/* Wildcard fallback to vibe page */}
           <Route path="*" element={<Navigate to="/vibe" replace />} />
         </Routes>
