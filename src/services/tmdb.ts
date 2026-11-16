@@ -365,6 +365,13 @@ export function buildDiscoverUrl(
     }
   }
 
+  // Special protection for Kids TV shows (prevent adult cartoons from appearing)
+  if (isTv && (filters.age?.has('kids') || filters.genre?.has('Family'))) {
+    if (!genreIds.includes(10762)) genreIds.push(10762);
+    // Explicitly exclude Crime, Horror, and Thriller from Kids TV
+    url.searchParams.set('without_genres', '80,27,53');
+  }
+
   if (wantsAnimation) {
     // ANCHOR ANIMATION: 16 must be mandatory so live-action doesn't swamp the feed!
     const otherGenres = genreIds.filter(id => id !== 16);
@@ -408,9 +415,16 @@ export function buildDiscoverUrl(
     }
   }
 
-  // Era / Release date
+  // Era / Release date & capping unreleased movies
+  const datePrefix = isTv ? 'first_air_date' : 'primary_release_date';
+  const today = new Date().toISOString().split('T')[0];
+
+  // Restrict unreleased future movies/shows so teaser entries don't flood results
+  if (!filters.era || filters.era.size === 0 || filters.era.has('n')) {
+    url.searchParams.set(`${datePrefix}.lte`, today);
+  }
+
   if (filters.era && filters.era.size > 0) {
-    const datePrefix = isTv ? 'first_air_date' : 'primary_release_date';
     if (filters.era.has('n')) {
       url.searchParams.set(`${datePrefix}.gte`, '2023-01-01');
     } else if (filters.era.has('a')) {
@@ -1534,6 +1548,19 @@ export async function fetchDiscoverMovies(
         seenIds.add(item.id);
         mapped.push(mapTMDbItemToMedia(item, endpoint));
       }
+    }
+
+    // Safety fallback: if TMDb returns 0 matches for a hyper-strict combination,
+    // display verified curated media so user NEVER sees a broken empty screen
+    if (mapped.length === 0) {
+      const curated = getCuratedMedia(filters, overrideType, overrideSort);
+      return {
+        results: curated,
+        totalPages: 1,
+        totalResults: curated.length,
+        source: 'curated',
+        endpoint,
+      };
     }
 
     return {
