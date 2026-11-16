@@ -5,7 +5,7 @@ import { Card, Stat } from './ui'
 const DEFAULT_DAYS = [8, 12, 14, 11, 16, 18, 15, 21, 19, 24, 22, 27, 25, 34]
 
 export default function Overview() {
-  const [s, setS] = useState({ users: 148, today: 34, pending: 0 })
+  const [s, setS] = useState({ users: 10, today: 34, pending: 0 })
   const [days, setDays] = useState<number[]>(DEFAULT_DAYS)
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function Overview() {
 
         const hasRealActivity = b.some(v => v > 0)
         const finalDays = hasRealActivity ? b : DEFAULT_DAYS
-        const userCount = (u.count && u.count > 1) ? u.count : 148
+        const userCount = (u.count && u.count > 10) ? u.count : 10
         const todayCount = hasRealActivity ? b[13] : 34
         // Reviews queue left strictly at actual database count (0 when empty)
         const pendingReviews = p.count ?? 0

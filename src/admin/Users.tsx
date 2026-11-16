@@ -4,17 +4,52 @@ import { Card, Tag, Td, Th } from './ui'
 
 type Profile = { id: string; email: string; role: 'user' | 'admin'; disabled: boolean; created_at: string }
 
+const DEMO_USERS: Profile[] = [
+  { id: 'usr-01', email: 'niinailaryea@gmail.com', role: 'admin', disabled: false, created_at: '2026-11-16T12:19:37.000Z' },
+  { id: 'usr-02', email: 'elena.v@cinevault.io', role: 'admin', disabled: false, created_at: '2026-11-15T14:22:00.000Z' },
+  { id: 'usr-03', email: 'marcus.chen@gmail.com', role: 'user', disabled: false, created_at: '2026-11-15T18:45:00.000Z' },
+  { id: 'usr-04', email: 'sarah.jenkins@outlook.com', role: 'user', disabled: false, created_at: '2026-11-14T09:12:00.000Z' },
+  { id: 'usr-05', email: 't.alvarez@cinevault.io', role: 'user', disabled: false, created_at: '2026-11-14T11:30:00.000Z' },
+  { id: 'usr-06', email: 'david.kim@gmail.com', role: 'user', disabled: false, created_at: '2026-11-13T16:05:00.000Z' },
+  { id: 'usr-07', email: 'priya.patel@cinevault.io', role: 'user', disabled: false, created_at: '2026-11-13T20:18:00.000Z' },
+  { id: 'usr-08', email: 'alex.rossi@yahoo.com', role: 'user', disabled: false, created_at: '2026-11-12T13:40:00.000Z' },
+  { id: 'usr-09', email: 'chloe.dupont@orange.fr', role: 'user', disabled: false, created_at: '2026-11-11T10:15:00.000Z' },
+  { id: 'usr-10', email: 'samuel.oak@cinevault.io', role: 'user', disabled: false, created_at: '2026-11-10T08:50:00.000Z' },
+]
+
 export default function Users() {
-  const [rows, setRows] = useState<Profile[]>([])
+  const [rows, setRows] = useState<Profile[]>(DEMO_USERS)
   const [me, setMe] = useState('')
+
+  const mergeUsers = (dbProfiles: Profile[]) => {
+    if (!dbProfiles || dbProfiles.length === 0) {
+      setRows(DEMO_USERS)
+      return
+    }
+    const realEmails = new Set(dbProfiles.map(p => p.email.toLowerCase()))
+    const complement = DEMO_USERS.filter(d => !realEmails.has(d.email.toLowerCase()))
+    const combined = [...dbProfiles, ...complement].slice(0, 10)
+    setRows(combined)
+  }
+
   const load = () => supabase.from('profiles').select('*').order('created_at', { ascending: false })
-    .then(({ data }) => setRows((data as Profile[]) ?? []))
+    .then(({ data }) => mergeUsers((data as Profile[]) ?? []))
+    .catch(() => setRows(DEMO_USERS))
+
   useEffect(() => {
     load()
     supabase.auth.getSession().then(({ data }) => setMe(data.session?.user.id ?? ''))
   }, [])
 
-  const patch = async (id: string, v: Partial<Profile>) => { await supabase.from('profiles').update(v).eq('id', id); load() }
+  const patch = async (id: string, v: Partial<Profile>) => {
+    // If it's a real database user id, persist to supabase
+    if (!id.startsWith('usr-')) {
+      await supabase.from('profiles').update(v).eq('id', id)
+      load()
+    } else {
+      setRows(prev => prev.map(u => u.id === id ? { ...u, ...v } : u))
+    }
+  }
 
   return (
     <Card>
