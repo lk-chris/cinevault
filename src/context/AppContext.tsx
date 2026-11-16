@@ -23,6 +23,8 @@ import {
   parseVibePromptWithAI,
   DEFAULT_GEMINI_KEY
 } from '../services/ai';
+import { supabase } from '../lib/supabase';
+
 
 interface AppContextType {
   apiKey: string;
@@ -591,9 +593,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const curateWithAI = useCallback(async (prompt: string): Promise<{ success: boolean; filters?: Sel; explanation?: string }> => {
     if (!prompt.trim()) return { success: false };
     setAiLoading(true);
+    const startTime = performance.now();
     try {
       toast("Asking Cinevault AI...");
       const res = await parseVibePromptWithAI(prompt, geminiKey, apiKey);
+      const latencyMs = Math.round(performance.now() - startTime);
+
+      // Log AI telemetry to Supabase
+      supabase.from('ai_usage').insert({
+        prompt: prompt.trim(),
+        model: 'gemini-3.8-flash',
+        tokens_in: Math.max(1, Math.round(prompt.length / 4)),
+        tokens_out: Math.max(1, Math.round((res.explanation?.length || 40) / 4)),
+        latency_ms: latencyMs,
+        ok: true,
+      }).then(() => {}).catch(e => console.warn('Supabase ai_usage log error:', e));
+
       setSel(res.filters);
       setAiExplanation(res.explanation);
       try {
@@ -630,6 +645,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toast("Feed curated by AI!");
       return { success: true, filters: res.filters, explanation: res.explanation };
     } catch (err: any) {
+      const latencyMs = Math.round(performance.now() - startTime);
+      // Log failure telemetry to Supabase
+      supabase.from('ai_usage').insert({
+        prompt: prompt.trim(),
+        model: 'gemini-3.8-flash',
+        tokens_in: Math.max(1, Math.round(prompt.length / 4)),
+        tokens_out: 0,
+        latency_ms: latencyMs,
+        ok: false,
+      }).then(() => {}).catch(() => {});
+
       console.error('AI curation failed:', err);
       toast(err.message || 'AI curation failed. Please try again.');
       return { success: false };
@@ -727,6 +753,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       [id]: [clean, ...(prev[id] || [])]
     }));
     toast("Review posted");
+
+    // Sync review with Supabase reviews table for moderation
+    const media = mediaRegistry.get(id);
+    const title = media?.title || `Title #${id}`;
+    const rating = rates[id] || 5;
+
+    supabase.from('reviews').insert({
+      title,
+      rating,
+      body: clean,
+      status: 'pending'
+    }).then(({ error }) => {
+      if (error) console.warn('Supabase review insert error:', error);
+    }).catch(err => {
+      console.warn('Failed to post review to Supabase:', err);
+    });
   };
 
   const value: AppContextType = {
