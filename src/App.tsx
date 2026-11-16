@@ -24,14 +24,14 @@ export default function App() {
       <HashRouter>
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<FeedPage tab="tonight" />} />
+          <Route path="/" element={<Navigate to="/vibe" replace />} />
           <Route path="/tonight" element={<FeedPage tab="tonight" />} />
           <Route path="/watchlist" element={<FeedPage tab="wl" />} />
           <Route path="/watched" element={<FeedPage tab="wd" />} />
           <Route path="/vibe" element={<VibePage />} />
           <Route path="/title/:id" element={<DetailPage />} />
-          {/* Wildcard fallback to tonight's feed */}
-          <Route path="*" element={<Navigate to="/tonight" replace />} />
+          {/* Wildcard fallback to vibe page */}
+          <Route path="*" element={<Navigate to="/vibe" replace />} />
         </Routes>
 
         {/* Global Toast & Sheet Modal */}

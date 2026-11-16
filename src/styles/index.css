@@ -68,3 +68,23 @@ body {
   background: repeating-conic-gradient(from 0deg at 50% 34%, rgba(255, 255, 255, 0.15) 0 6deg, transparent 6deg 14deg),
               conic-gradient(from 200deg at 50% 38%, #fbbf24, #ea580c, #7c2d12, #fbbf24);
 }
+
+/* AI Thinking Dots */
+@keyframes ai-dots {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
+  40% { opacity: 1; transform: scale(1.15); }
+}
+.animate-ai-dot-1 { animation: ai-dots 1s infinite; }
+.animate-ai-dot-2 { animation: ai-dots 1s infinite 0.15s; }
+.animate-ai-dot-3 { animation: ai-dots 1s infinite 0.3s; }
+
+/* Soundwave bars */
+@keyframes soundwave {
+  0%, 100% { height: 6px; }
+  50% { height: 22px; }
+}
+.animate-wave-1 { animation: soundwave 0.85s ease-in-out infinite; }
+.animate-wave-2 { animation: soundwave 0.85s ease-in-out infinite 0.12s; }
+.animate-wave-3 { animation: soundwave 0.85s ease-in-out infinite 0.24s; }
+.animate-wave-4 { animation: soundwave 0.85s ease-in-out infinite 0.36s; }
+.animate-wave-5 { animation: soundwave 0.85s ease-in-out infinite 0.48s; }

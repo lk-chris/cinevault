@@ -1,8 +1,13 @@
 import React from 'react';
+import { Sparkles } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { TOTAL_STEPS, SCREENS } from '../../constants/vibeData';
 
-export default function VibeHeader() {
+interface VibeHeaderProps {
+  onUseAi?: () => void;
+}
+
+export default function VibeHeader({ onUseAi }: VibeHeaderProps) {
   const { cur, skipStep, hasCurated } = useApp();
   const sc = cur < SCREENS.length ? SCREENS[cur] : null;
 
@@ -13,14 +18,25 @@ export default function VibeHeader() {
           <div className="text-xl font-light tracking-tight">
             Cine<b className="text-am font-bold">Vault</b>
           </div>
-          {sc && (
-            <button
-              onClick={skipStep}
-              className="text-t2 text-sm py-1 px-3 rounded-full hover:text-white hover:bg-white/[0.08] transition-colors"
-            >
-              Skip
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {onUseAi && (
+              <button
+                onClick={onUseAi}
+                className="inline-flex items-center gap-1.5 text-xs font-mono text-am py-1 px-3 rounded-full border border-am/30 bg-am/10 hover:bg-am/20 hover:border-am transition-colors cursor-pointer"
+              >
+                <Sparkles size={12} className="text-am" />
+                <span>Use AI</span>
+              </button>
+            )}
+            {sc && (
+              <button
+                onClick={skipStep}
+                className="text-t2 text-sm py-1 px-3 rounded-full hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+              >
+                Skip
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Progress Bar Segments */}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { SCREENS, ALL_LABELS } from '../constants/vibeData';
 import VibeHeader from '../components/vibe/VibeHeader';
@@ -7,11 +8,12 @@ import PosterTile from '../components/vibe/PosterTile';
 import TimeSvgTile from '../components/vibe/TimeSvgTile';
 import PillSelector from '../components/vibe/PillSelector';
 import VibeBottomBar from '../components/vibe/VibeBottomBar';
-import AiPromptBar from '../components/common/AiPromptBar';
+import AiVibeView from '../components/vibe/AiVibeView';
 
 export default function VibePage() {
   const navigate = useNavigate();
   const { cur, setCur, sel, toggleSel, nextStep, hasCurated, resetVibe } = useApp();
+  const [mode, setMode] = useState<'ai' | 'manual'>('ai');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const sc = cur < SCREENS.length ? SCREENS[cur] : null;
@@ -27,14 +29,27 @@ export default function VibePage() {
     resetVibe();
   };
 
+  // Render AI-first landing vibe page by default
+  if (mode === 'ai') {
+    return (
+      <AiVibeView
+        onPickManually={() => {
+          setMode('manual');
+          setCur(0);
+        }}
+      />
+    );
+  }
+
+  // Render Manual Step-by-Step wizard
   return (
     <div className="min-h-screen bg-bg text-white flex flex-col">
-      {/* Sticky Top Header */}
-      <VibeHeader />
+      {/* Sticky Top Header with Use AI button */}
+      <VibeHeader onUseAi={() => setMode('ai')} />
 
-      {/* Main scrolling content (pushes smoothly under sticky header) */}
+      {/* Main scrolling content */}
       <div className="w-full max-w-[760px] mx-auto px-[18px] pt-6 pb-[160px] flex-1">
-        {/* heading */}
+        {/* Heading */}
         <h1 className="text-[clamp(28px,6.5vw,42px)] font-bold leading-[1.05] tracking-tight mb-2">
           {sc ? sc.h : "Here's your vibe for tonight"}
         </h1>
@@ -45,20 +60,6 @@ export default function VibePage() {
             ? "We'll curate your feed from these picks."
             : "You haven't set your vibe yet. Get started below."}
         </p>
-
-        {/* Cinevault AI Natural Language Box */}
-        <div className="mb-6">
-          <AiPromptBar />
-        </div>
-
-        {/* Divider for step by step */}
-        {sc && (
-          <div className="flex items-center gap-3 my-5 text-xs text-t2 font-mono uppercase">
-            <span className="flex-1 h-px bg-white/10" />
-            <span>Or configure step-by-step below</span>
-            <span className="flex-1 h-px bg-white/10" />
-          </div>
-        )}
 
         {sc ? (
           /* Step content */
@@ -120,7 +121,7 @@ export default function VibePage() {
             </button>
           </div>
         ) : (
-          /* Original Summary chips layout */
+          /* Summary chips layout */
           <div>
             <div className="flex flex-wrap gap-2.5 mb-6">
               {["fmt", "mood", "genre", "time", "age", "era", "lang"].flatMap(k =>
@@ -135,13 +136,21 @@ export default function VibePage() {
               )}
             </div>
 
-            {/* CTA for reset feed beneath it, no SVG in the button */}
-            <div className="pt-2">
+            {/* CTAs */}
+            <div className="pt-2 flex items-center gap-3 flex-wrap">
               <button
                 onClick={() => setShowResetConfirm(true)}
                 className="py-2.5 px-5 rounded-full bg-s2 border border-white/[0.08] text-sm text-gray-300 hover:text-white hover:border-white/20 font-mono transition-colors cursor-pointer"
               >
                 Reset feed
+              </button>
+
+              <button
+                onClick={() => setMode('ai')}
+                className="inline-flex items-center gap-1.5 py-2.5 px-5 rounded-full bg-s1 border border-am/40 text-am hover:bg-am/10 font-mono text-sm transition-colors cursor-pointer"
+              >
+                <Sparkles size={14} />
+                <span>Adjust with AI</span>
               </button>
             </div>
           </div>
