@@ -64,16 +64,18 @@ const loadSavedAiMessages = (): Message[] => {
 
 export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
   const navigate = useNavigate();
-  const { sel, setSel, curateWithAI, aiLoading, hasCurated } = useApp();
+  const { sel, setSel, curateWithAI, aiLoading, hasCurated, resetVibe } = useApp();
 
   const [inputVal, setInputVal] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('Listening...');
   const [messages, setMessages] = useState<Message[]>(loadSavedAiMessages);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const recognitionRef = useRef<any>(null);
   const simTimerRef = useRef<any>(null);
   const threadEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const latestSpeechRef = useRef<string>('');
   const hasSubmittedSpeechRef = useRef<boolean>(false);
   const selRef = useRef(sel);
@@ -81,6 +83,15 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
   useEffect(() => {
     selRef.current = sel;
   }, [sel]);
+
+  // Auto-resize textarea as content expands
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const nextH = Math.min(Math.max(textareaRef.current.scrollHeight, 26), 140);
+      textareaRef.current.style.height = `${nextH}px`;
+    }
+  }, [inputVal]);
 
   // Persist messages in localStorage across route changes
   useEffect(() => {
@@ -133,9 +144,11 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
     }
   }, [hasCurated]);
 
-  const handleClearChat = () => {
+  const handleConfirmReset = () => {
+    setShowResetConfirm(false);
     setMessages([]);
     localStorage.removeItem(STORAGE_KEY_AI_MESSAGES);
+    resetVibe();
   };
 
   // Auto-scroll when messages update
@@ -327,24 +340,13 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
             Cine<b className="text-am font-bold">Vault</b>
           </div>
 
-          <div className="flex items-center gap-2">
-            {messages.length > 0 && (
-              <button
-                onClick={handleClearChat}
-                className="inline-flex items-center gap-1 text-xs font-mono text-t2 hover:text-white bg-s1 hover:bg-s2 border border-white/[0.08] px-3 py-1.5 rounded-full transition-colors cursor-pointer"
-                title="Start a new AI conversation"
-              >
-                <span>New prompt</span>
-              </button>
-            )}
-            <button
-              onClick={onPickManually}
-              className="inline-flex items-center gap-1.5 text-xs font-mono text-t2 hover:text-white bg-s1 hover:bg-s2 border border-white/[0.08] px-3.5 py-1.5 rounded-full transition-colors cursor-pointer"
-            >
-              <SlidersHorizontal size={13} className="text-t2" />
-              <span>Pick manually</span>
-            </button>
-          </div>
+          <button
+            onClick={onPickManually}
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-t2 hover:text-white bg-s1 hover:bg-s2 border border-white/[0.08] px-3.5 py-1.5 rounded-full transition-colors cursor-pointer"
+          >
+            <SlidersHorizontal size={13} className="text-t2" />
+            <span>Pick manually</span>
+          </button>
         </div>
       </header>
 
@@ -435,20 +437,20 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
 
                   {/* CTAs (only on live AI message) */}
                   {msg.isLive && (
-                    <div className="flex items-center gap-2.5 pt-2 flex-wrap">
+                    <div className="flex items-center justify-between gap-3 pt-3 w-full">
                       <button
-                        onClick={() => navigate('/tonight')}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-am hover:bg-amber-400 text-[#111] font-semibold text-sm transition-all cursor-pointer shadow-md hover:shadow-lg active:scale-98"
+                        onClick={() => setShowResetConfirm(true)}
+                        className="py-2.5 px-5 rounded-full bg-s1 hover:bg-s2 border border-white/[0.08] text-xs font-mono text-gray-300 hover:text-white transition-colors cursor-pointer active:scale-95"
                       >
-                        <span>Show my picks</span>
-                        <ArrowRight size={15} />
+                        Reset feed
                       </button>
 
                       <button
-                        onClick={onPickManually}
-                        className="px-4 py-2.5 rounded-full bg-s1 hover:bg-s2 border border-white/[0.08] hover:border-white/20 text-white font-medium text-sm transition-colors cursor-pointer"
+                        onClick={() => navigate('/tonight')}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-am hover:bg-amber-400 text-[#111] font-semibold text-sm transition-all cursor-pointer shadow-md hover:shadow-lg active:scale-95"
                       >
-                        Edit in steps
+                        <span>Show my picks</span>
+                        <ArrowRight size={15} />
                       </button>
                     </div>
                   )}
@@ -476,20 +478,64 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
         </div>
       </main>
 
+      {/* Confirmation Modal for Resetting Feed */}
+      {showResetConfirm && (
+        <div
+          id="confirm-reset-backdrop"
+          onClick={(e) => {
+            if ((e.target as HTMLElement).id === "confirm-reset-backdrop") {
+              setShowResetConfirm(false);
+            }
+          }}
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm"
+        >
+          <div
+            className="w-full max-w-[420px] bg-s1 rounded-2xl p-6 border border-white/[0.1] shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-white mb-2">
+              Reset your feed?
+            </h3>
+            <p className="text-sm text-t2 leading-relaxed mb-6">
+              This will clear all your active preferences and return you to a clean slate.
+            </p>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="px-4 py-2 rounded-full bg-s2 border border-white/[0.08] text-xs font-mono text-gray-300 hover:text-white transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmReset}
+                className="px-5 py-2 rounded-full bg-am text-[#111] text-xs font-bold font-mono hover:brightness-110 transition-all cursor-pointer shadow-lg shadow-am/10"
+              >
+                Yes, reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Bottom Composer Bar */}
       <div className="fixed left-0 right-0 bottom-[calc(56px+env(safe-area-inset-bottom,0px))] px-4 pt-3 pb-3 bg-gradient-to-t from-bg via-bg/95 to-transparent flex justify-center z-30">
-        <div className="relative w-full max-w-[760px] flex items-center gap-1.5 p-1.5 pl-4 rounded-full bg-s1 border border-white/[0.08] focus-within:border-am/70 shadow-2xl shadow-black/80 transition-all">
-          <input
-            type="text"
+        <div className="relative w-full max-w-[760px] flex items-end gap-1.5 p-1.5 pl-4 rounded-[26px] bg-s1 border border-white/[0.08] focus-within:border-am/70 shadow-2xl shadow-black/80 transition-all">
+          <textarea
+            ref={textareaRef}
+            rows={1}
             value={inputVal}
             onChange={e => setInputVal(e.target.value)}
             onKeyDown={e => {
-              if (e.key === 'Enter') handleSendPrompt();
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendPrompt();
+              }
             }}
             placeholder="Describe your night"
             aria-label="Describe what you want to watch"
             disabled={aiLoading || isListening}
-            className="flex-1 min-w-0 bg-transparent border-0 text-white placeholder-t2 text-[15px] outline-none"
+            className="flex-1 min-w-0 bg-transparent border-0 text-white placeholder-t2 text-[15px] leading-relaxed outline-none resize-none py-2 my-0 max-h-[140px] overflow-y-auto"
           />
 
           {/* Mic Button */}
@@ -498,7 +544,7 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
             disabled={aiLoading || isListening}
             aria-label="Speak your vibe"
             title="Use microphone"
-            className="w-10 h-10 rounded-full grid place-items-center bg-s2 hover:bg-s3 text-white transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+            className="w-10 h-10 rounded-full grid place-items-center bg-s2 hover:bg-s3 text-white transition-colors cursor-pointer shrink-0 mb-0.5 disabled:opacity-50"
           >
             <Mic size={18} />
           </button>
@@ -509,7 +555,7 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
             disabled={!inputVal.trim() || aiLoading || isListening}
             aria-label="Send"
             title="Send vibe prompt"
-            className={`w-10 h-10 rounded-full grid place-items-center transition-all shrink-0 cursor-pointer ${
+            className={`w-10 h-10 rounded-full grid place-items-center transition-all shrink-0 mb-0.5 cursor-pointer ${
               inputVal.trim() && !aiLoading && !isListening
                 ? 'bg-am text-[#111] hover:bg-amber-400 active:scale-95'
                 : 'bg-s2 text-t2 opacity-50 cursor-not-allowed'
@@ -520,7 +566,7 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
 
           {/* Listening Overlay with Soundwaves & Transcript */}
           {isListening && (
-            <div className="absolute inset-0 rounded-full bg-s1 border border-am/40 flex items-center gap-3 px-4 z-10 animate-in fade-in duration-150">
+            <div className="absolute inset-0 rounded-[26px] bg-s1 border border-am/40 flex items-center gap-3 px-4 py-2 z-10 animate-in fade-in duration-150 shadow-xl">
               {/* Waveform bars */}
               <div className="flex items-center gap-1 h-6 shrink-0">
                 <i className="w-1 h-1.5 rounded-full bg-am animate-wave-1" />
@@ -530,10 +576,10 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
                 <i className="w-1 h-1.5 rounded-full bg-am animate-wave-5" />
               </div>
 
-              {/* Spoken transcript */}
-              <span className="flex-1 min-w-0 text-sm text-gray-200 font-mono truncate">
+              {/* Spoken transcript that wraps without cutting off */}
+              <div className="flex-1 min-w-0 max-h-[120px] overflow-y-auto text-sm text-gray-200 font-mono leading-relaxed break-words py-1">
                 {transcript}
-              </span>
+              </div>
 
               {/* Cancel listening */}
               <button

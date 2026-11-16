@@ -35,7 +35,7 @@ export default function VibePage() {
       <AiVibeView
         onPickManually={() => {
           setMode('manual');
-          setCur(0);
+          setCur(SCREENS.length);
         }}
       />
     );
