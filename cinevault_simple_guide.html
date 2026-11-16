@@ -468,7 +468,7 @@
   <div class="page">
     <div class="top-bar">
       <div class="brand">Cine<span>Vault</span></div>
-      <div class="doc-badge">Tech Stack & Connecting AI</div>
+      <div class="doc-badge">Tech Stack & Offline Backup</div>
     </div>
 
     <div class="content">
@@ -511,57 +511,11 @@
           If you're presenting somewhere with terrible Wi-Fi, or if TMDb goes down, Cinevault has an automated <strong>Curated Backup Catalog</strong> stored right inside the app. It will seamlessly show high-quality verified titles (like <em>Top Gun: Maverick</em>, <em>Avatar</em>, <em>Spirited Away</em>) with zero error messages.
         </div>
       </div>
-
-      <h2><span class="num">11</span> Technical Architecture: How We Connect AI to Cinevault</h2>
-      <div class="card card-highlight">
-        <div class="card-title">The Engineering Pipeline (From Natural Language to TMDb Query)</div>
-        <div class="card-text">
-          Connecting an AI (like Google Gemini or OpenAI) is not just a chatbot popup. It is a <strong>structured translation pipeline</strong> that converts a free-form human sentence directly into Cinevault's existing <code>OnboardingFilters</code> TypeScript contract:
-        </div>
-      </div>
-
-      <div class="grid-2" style="margin-top: 2.5mm;">
-        <div class="card">
-          <div class="card-title">1. Edge API Proxy (Security & Auth)</div>
-          <div class="card-text">
-            <strong>Where it runs:</strong> Never expose AI API keys on the frontend. The React client calls a serverless endpoint: <code>POST /api/ai-vibe</code> (e.g. Cloudflare Worker or Vercel Edge Function). The Worker injects the secret API key into the header and calls the Gemini API.
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">2. Structured Outputs (JSON Schema)</div>
-          <div class="card-text">
-            <strong>Strict Type Enforcement:</strong> We provide the LLM with a JSON Schema matching Cinevault's exact <code>Sel</code> type. The LLM is forced to return valid JSON with zero conversational filler:
-            <br>
-            <code>{"fmt":["movie"],"mood":["mind"],"genre":["Mystery","Comedy"],"time":["s"]}</code>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid-2" style="margin-top: 2.5mm;">
-        <div class="card">
-          <div class="card-title">3. React State Hook (AppContext Integration)</div>
-          <div class="card-text">
-            <strong>Instant Feed Generation:</strong> The frontend receives the typed JSON and directly calls existing AppContext functions:
-            <br>
-            <code>const aiFilters = parseAiResponse(json);</code><br>
-            <code>setSel(aiFilters);</code><br>
-            <code>await loadFeed(aiFilters);</code>
-            <br>
-            The feed automatically updates in milliseconds.
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">4. Vector Embeddings (Semantic RAG)</div>
-          <div class="card-text">
-            <strong>For vibes beyond genre tags:</strong> For prompts like <em>"rainy aesthetic with cozy autumn vibes"</em>, we run <code>text-embedding-004</code> on the prompt and query a vector index (e.g. Cloudflare Vectorize) containing 800,000 movie synopses via Cosine Similarity.
-          </div>
-        </div>
-      </div>
     </div>
 
     <div class="footer">
       <span>Cinevault Team Presentation Guide</span>
-      <span>Tech Stack & Connecting AI · Page 3 of 3</span>
+      <span>Tech Stack & Offline Backup · Page 3 of 3</span>
     </div>
   </div>
 
