@@ -275,7 +275,38 @@ export async function parseVibePromptWithAI(
   const trimmedKey = (apiKey || DEFAULT_GEMINI_KEY).trim();
   const workerUrl = (import.meta as any).env?.VITE_WORKER_URL;
 
-  // ─── 1. TRY CLOUDFLARE WORKER IF CONFIGURED ───
+  // ─── 1. TRY SAME-ORIGIN CLOUDFLARE ENDPOINT (/api/ai-vibe) ───
+  try {
+    const res = await fetch('/api/ai-vibe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: userPrompt.trim() }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.filters) {
+        return {
+          filters: {
+            fmt: new Set(data.filters.fmt || ['movie']),
+            mood: new Set(data.filters.mood || []),
+            genre: new Set(data.filters.genre || []),
+            time: new Set(data.filters.time || ['any']),
+            age: new Set(data.filters.age || []),
+            era: new Set(data.filters.era || []),
+            lang: new Set(data.filters.lang || []),
+          },
+          explanation: data.explanation || 'Curated using Cinevault AI.',
+          suggestedTitles: Array.isArray(data.suggestedTitles) ? data.suggestedTitles : [],
+          raw: data.filters,
+        };
+      }
+    }
+  } catch (e) {
+    // Continue to external worker URL or fallback
+  }
+
+  // ─── 2. TRY EXTERNAL CLOUDFLARE WORKER IF CONFIGURED ───
   if (workerUrl) {
     try {
       const res = await fetch(`${workerUrl.replace(/\/$/, '')}/api/ai-vibe`, {
@@ -287,18 +318,16 @@ export async function parseVibePromptWithAI(
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.filters) {
-          const filters: Sel = {
-            fmt: new Set(data.filters.fmt || ['movie']),
-            mood: new Set(data.filters.mood || []),
-            genre: new Set(data.filters.genre || []),
-            time: new Set(data.filters.time || ['any']),
-            age: new Set(data.filters.age || []),
-            era: new Set(data.filters.era || []),
-            lang: new Set(data.filters.lang || []),
-          };
-
           return {
-            filters,
+            filters: {
+              fmt: new Set(data.filters.fmt || ['movie']),
+              mood: new Set(data.filters.mood || []),
+              genre: new Set(data.filters.genre || []),
+              time: new Set(data.filters.time || ['any']),
+              age: new Set(data.filters.age || []),
+              era: new Set(data.filters.era || []),
+              lang: new Set(data.filters.lang || []),
+            },
             explanation: data.explanation || 'Curated using Cinevault AI.',
             suggestedTitles: Array.isArray(data.suggestedTitles) ? data.suggestedTitles : [],
             raw: data.filters,
