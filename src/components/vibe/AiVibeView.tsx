@@ -52,9 +52,16 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
   const recognitionRef = useRef<any>(null);
   const simTimerRef = useRef<any>(null);
   const threadEndRef = useRef<HTMLDivElement>(null);
+  const latestSpeechRef = useRef<string>('');
+  const hasSubmittedSpeechRef = useRef<boolean>(false);
+  const selRef = useRef(sel);
+
+  useEffect(() => {
+    selRef.current = sel;
+  }, [sel]);
 
   // Extract active filters from AppContext `sel`
-  const getActiveFilterItems = (currentSel = sel): FilterItem[] => {
+  const getActiveFilterItems = (currentSel = selRef.current): FilterItem[] => {
     const items: FilterItem[] = [];
     const keys = ["fmt", "mood", "genre", "time", "age", "era", "lang"];
     keys.forEach(k => {
@@ -112,7 +119,8 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
       prev.map(msg => {
         if (msg.filters) {
           return {
-            ...msg.filters ? { ...msg, filters: msg.filters.filter(f => !(f.key === filterKey && f.id === filterId)) } : msg
+            ...msg,
+            filters: msg.filters.filter(f => !(f.key === filterKey && f.id === filterId))
           };
         }
         return msg;
@@ -137,35 +145,40 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
       { id: userMsgId, sender: 'user', text: query }
     ]);
 
-    // Perform curation
-    await curateWithAI(query);
+    // Perform curation with AI
+    const result = await curateWithAI(query);
 
-    // After curation, update with the latest extracted filters from sel
-    // Read the latest state from context
-    setTimeout(() => {
-      setMessages(prev => {
-        const items = getActiveFilterItems();
-        return [
-          ...prev,
-          {
-            id: aiMsgId,
-            sender: 'ai',
-            text: items.length > 0
-              ? "Here’s what I picked up. Remove what’s off, or tell me more."
-              : "I couldn't quite pin that down. Are you after a movie, a series, or anime?",
-            filters: items,
-            suggestions: REFINEMENT_SUGGESTIONS,
-            isLive: true
-          }
-        ];
-      });
-    }, 150);
+    // After curation, update with the latest extracted filters from result or sel
+    const activeFilters = result?.filters
+      ? getActiveFilterItems(result.filters)
+      : getActiveFilterItems();
+
+    setMessages(prev => [
+      ...prev,
+      {
+        id: aiMsgId,
+        sender: 'ai',
+        text: activeFilters.length > 0
+          ? (result?.explanation || "Here’s what I picked up. Remove what’s off, or tell me more.")
+          : "I couldn't quite pin that down. Are you after a movie, a series, or anime?",
+        filters: activeFilters,
+        suggestions: REFINEMENT_SUGGESTIONS,
+        isLive: true
+      }
+    ]);
   };
 
   // Voice recognition / Mic handler
   const startListening = () => {
+    if (isListening) {
+      cancelListening();
+      return;
+    }
+
     setIsListening(true);
     setTranscript('Listening...');
+    latestSpeechRef.current = '';
+    hasSubmittedSpeechRef.current = false;
 
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -179,23 +192,44 @@ export default function AiVibeView({ onPickManually }: AiVibeViewProps) {
         recognition.lang = 'en-US';
 
         recognition.onresult = (event: any) => {
-          const current = event.resultIndex;
-          const transcriptText = event.results[current][0].transcript;
-          setTranscript(transcriptText);
+          let finalTranscript = '';
+          let interimTranscript = '';
 
-          if (event.results[current].isFinal) {
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+
+          const capturedText = (finalTranscript || interimTranscript).trim();
+          if (capturedText) {
+            latestSpeechRef.current = capturedText;
+            setTranscript(capturedText);
+          }
+
+          if (finalTranscript.trim() && !hasSubmittedSpeechRef.current) {
+            hasSubmittedSpeechRef.current = true;
             setTimeout(() => {
-              handleSendPrompt(transcriptText);
-            }, 500);
+              cancelListening();
+              handleSendPrompt(finalTranscript.trim());
+            }, 400);
           }
         };
 
         recognition.onerror = () => {
-          fallbackSpeechSimulation();
+          if (!hasSubmittedSpeechRef.current && !latestSpeechRef.current.trim()) {
+            fallbackSpeechSimulation();
+          }
         };
 
         recognition.onend = () => {
           setIsListening(false);
+          if (!hasSubmittedSpeechRef.current && latestSpeechRef.current.trim()) {
+            hasSubmittedSpeechRef.current = true;
+            handleSendPrompt(latestSpeechRef.current.trim());
+          }
         };
 
         recognition.start();

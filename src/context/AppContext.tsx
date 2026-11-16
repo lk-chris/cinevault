@@ -72,7 +72,7 @@ interface AppContextType {
   geminiKey: string;
   aiLoading: boolean;
   aiExplanation: string | null;
-  curateWithAI: (prompt: string) => Promise<boolean>;
+  curateWithAI: (prompt: string) => Promise<{ success: boolean; filters?: Sel; explanation?: string }>;
   clearAiExplanation: () => void;
 }
 
@@ -576,8 +576,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     window.scrollTo(0, 0);
   }, [clearAiExplanation, loadFeed, toast]);
 
-  const curateWithAI = useCallback(async (prompt: string): Promise<boolean> => {
-    if (!prompt.trim()) return false;
+  const curateWithAI = useCallback(async (prompt: string): Promise<{ success: boolean; filters?: Sel; explanation?: string }> => {
+    if (!prompt.trim()) return { success: false };
     setAiLoading(true);
     try {
       toast("Asking Cinevault AI...");
@@ -616,11 +616,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       toast("Feed curated by AI!");
-      return true;
+      return { success: true, filters: res.filters, explanation: res.explanation };
     } catch (err: any) {
       console.error('AI curation failed:', err);
       toast(err.message || 'AI curation failed. Please try again.');
-      return false;
+      return { success: false };
     } finally {
       setAiLoading(false);
     }

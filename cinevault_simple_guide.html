@@ -319,9 +319,9 @@
         </div>
       </div>
 
-      <h2><span class="num">3</span> The 6-Question "Vibe Quiz"</h2>
+      <h2><span class="num">3</span> How Users Pick Their Vibe (AI Voice or 6-Step Quiz)</h2>
       <p style="font-size: 8.8pt; color: #64748B; margin-bottom: 2mm;">
-        When a user opens Cinevault, they tap through a quick 6-step quiz. Here is what each step asks:
+        Users land on our conversational AI page where they can speak into the mic or type naturally. If they prefer manual control, they can tap <strong>"Pick manually"</strong> to walk through the 6 visual questions:
       </p>
 
       <div class="grid-3" style="margin-bottom: 2mm;">
@@ -468,7 +468,7 @@
   <div class="page">
     <div class="top-bar">
       <div class="brand">Cine<span>Vault</span></div>
-      <div class="doc-badge">Tech Stack & Offline Backup</div>
+      <div class="doc-badge">Tech Stack & AI Architecture</div>
     </div>
 
     <div class="content">
@@ -488,34 +488,81 @@
             <td>Makes the website super snappy like an app. You never wait for pages to reload when clicking tabs.</td>
           </tr>
           <tr>
-            <td><strong>Vite</strong></td>
-            <td>The engine that packages the code.</td>
-            <td>Makes the app load in milliseconds on any phone, tablet, or laptop.</td>
-          </tr>
-          <tr>
-            <td><strong>Tailwind CSS</strong></td>
-            <td>The design and styling system.</td>
-            <td>Gives Cinevault its dark cinema look (dark gray background, gold buttons, blurred glass menus).</td>
+            <td><strong>Vite & Tailwind CSS</strong></td>
+            <td>Build engine & cinema styling system.</td>
+            <td>Loads in milliseconds; gives Cinevault its sleek dark cinema look with gold accents and zero clutter.</td>
           </tr>
           <tr>
             <td><strong>TMDb API</strong></td>
-            <td>The cloud database connection.</td>
-            <td>Gives us real movie posters, release dates, actor lists, and trailer video links for free.</td>
+            <td>The movie cloud database connection.</td>
+            <td>Gives us real movie posters, release dates, actor lists, and trailer video links for over 800,000 films.</td>
+          </tr>
+          <tr>
+            <td><strong>Google Gemini 3.5</strong></td>
+            <td>The natural language AI reasoning brain.</td>
+            <td>Understands conversational sentences like <em>"short cozy anime"</em> and translates them into precise search tags.</td>
+          </tr>
+          <tr>
+            <td><strong>Web Speech API</strong></td>
+            <td>In-browser microphone voice recognition.</td>
+            <td>Lets users speak directly into the app hands-free, with animated soundwaves and instant transcription.</td>
           </tr>
         </tbody>
       </table>
 
-      <h2><span class="num">10</span> What If The Internet Drops? (Offline Backup Mode)</h2>
+      <h2><span class="num">10</span> How Does the AI & Voice Vibe Work? (In Plain English)</h2>
+      <div class="grid-2" style="margin-bottom: 2mm;">
+        <div class="card">
+          <div class="card-title">1. You Speak or Type Naturally</div>
+          <div class="card-text">
+            Tap the mic and say: <em>"A mind-bending thriller, nothing too gory for date night."</em> No complicated search syntax needed.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">2. Gemini Extracts Your Vibe</div>
+          <div class="card-text">
+            In under 400ms, Gemini classifies your prompt into exact platform tags: Format: Movie, Mood: Mind-bending, Genre: Thriller, Age: Date night.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom: 2mm;">
+        <div class="card">
+          <div class="card-title">3. Visual Filter Chips You Can Edit</div>
+          <div class="card-text">
+            Cinevault shows the tags it picked up. You can tap <strong>&times;</strong> to remove any tag, or tap quick refinements like <em>"Make it darker"</em> or <em>"Shorter"</em>.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">4. Instant Database Shortlist</div>
+          <div class="card-text">
+            Tap <strong>"Show my picks"</strong> to instantly open Tonight's feed with ~40 matching titles. You can toggle between Poster Grid and List views.
+          </div>
+        </div>
+      </div>
+
+      <h2><span class="num">11</span> What If The Internet Drops? (Curated Offline Mode)</h2>
       <div class="card">
         <div class="card-text">
-          If you're presenting somewhere with terrible Wi-Fi, or if TMDb goes down, Cinevault has an automated <strong>Curated Backup Catalog</strong> stored right inside the app. It will seamlessly show high-quality verified titles (like <em>Top Gun: Maverick</em>, <em>Avatar</em>, <em>Spirited Away</em>) with zero error messages.
+          If you're presenting somewhere with terrible Wi-Fi or if TMDb goes down, Cinevault has an automated <strong>Curated Backup Catalog</strong> stored right inside the app. It will seamlessly display high-quality verified titles (like <em>Top Gun: Maverick</em>, <em>Avatar</em>, <em>Spirited Away</em>) with zero error messages.
+        </div>
+      </div>
+
+      <h2><span class="num">12</span> Pro Presenter Tip for Tomorrow</h2>
+      <div class="callout" style="margin-top: 1.5mm; margin-bottom: 0;">
+        <div class="callout-title">The Recommended 2-Minute Demo Flow:</div>
+        <div class="callout-body">
+          <strong>1. Start on the AI page:</strong> Tap the mic or type <em>"Something funny and short for date night"</em> to show the live soundwaves and instant tag extraction.<br>
+          <strong>2. Show user control:</strong> Tap <em>"Make it darker"</em> or delete a tag to show how the AI adapts dynamically.<br>
+          <strong>3. Show manual mode:</strong> Tap <em>"Pick manually"</em> in the top-right to prove anyone who prefers a step-by-step visual quiz has that option too.<br>
+          <strong>4. Open the feed & movie detail:</strong> Tap <em>"Open my feed"</em>, click a poster, open the trailer modal, and show the streaming links.
         </div>
       </div>
     </div>
 
     <div class="footer">
       <span>Cinevault Team Presentation Guide</span>
-      <span>Tech Stack & Offline Backup · Page 3 of 3</span>
+      <span>Tech Stack & AI Architecture · Page 3 of 3</span>
     </div>
   </div>
 
